@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#14100d"/>
+  <circle cx="256" cy="300" r="170" fill="#1a1410"/>
+  <!-- bonfire flame -->
+  <path d="M256 96
+           C 250 170, 196 196, 196 270
+           a 60 60 0 0 0 120 0
+           C 316 226, 286 214, 286 178
+           C 286 210, 268 222, 256 96 Z"
+        fill="#d4682a"/>
+  <path d="M256 168
+           C 252 214, 226 228, 226 282
+           a 30 30 0 0 0 60 0
+           C 286 250, 270 244, 256 168 Z"
+        fill="#f4a85c"/>
+  <!-- coiled sword / ash mound base -->
+  <path d="M150 372 h212 l-30 36 h-152 z" fill="#3d3127"/>
+  <rect x="244" y="300" width="24" height="96" rx="6" fill="#5a4a3a"/>
+  <rect x="214" y="332" width="84" height="12" rx="6" fill="#5a4a3a"/>
+</svg>

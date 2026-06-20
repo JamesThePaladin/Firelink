@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+/* Dark Souls themed palette — bonfire embers over ash and iron. */
+@theme {
+  --color-ash-950: #0a0807;
+  --color-ash-900: #14100d;
+  --color-ash-850: #1a1410;
+  --color-ash-800: #221b16;
+  --color-ash-700: #2e251d;
+  --color-ash-600: #3d3127;
+  --color-ash-500: #5a4a3a;
+  --color-ash-400: #7d6a55;
+  --color-ash-300: #a8927a;
+
+  --color-ember-600: #b3501f;
+  --color-ember-500: #d4682a;
+  --color-ember-400: #e8893f;
+  --color-ember-300: #f4a85c;
+
+  --color-soul-500: #c9b27a;
+  --color-soul-400: #ddc98f;
+
+  --color-blood-600: #7a1f1f;
+  --color-blood-500: #a83232;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-ash-950);
+  color: var(--color-ash-300);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
