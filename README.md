@@ -40,6 +40,12 @@ After first load it works offline (service worker precaches everything).
 > Node was installed to `~/.local` (no sudo). If `npm` isn't found, ensure
 > `~/.local/bin` is on your `PATH`.
 
+## Hosting
+
+To put Firelink online (so you can install it on your phone from anywhere), see
+[`docs/HOSTING.md`](docs/HOSTING.md) — covers GitHub Pages, Netlify/Vercel, and
+self-hosting, with the private-repo caveat for Pages.
+
 ## Data sources & accuracy
 
 The **equipment catalog (~310 items, all sets)** in `src/data/equipment.ts` is
