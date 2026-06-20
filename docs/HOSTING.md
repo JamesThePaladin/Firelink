@@ -99,6 +99,27 @@ Netlify Drop (app.netlify.com/drop) — instant hosting, nothing else to configu
 
 ---
 
+## Option D — Wrap as an installable APK (no host needed) — TODO, likely preferred
+
+For infrequent use (≈monthly), standing up an HTTPS host just to launch the app is
+overkill. Instead, **bundle the built `dist/` into a native Android APK** and sideload it
+once — fully offline, no server, no Pages, nothing to maintain.
+
+- **[Capacitor](https://capacitorjs.com)** (recommended): wraps the web build into a real
+  APK that **bundles the assets locally**, so it needs no host at all. Rough flow:
+  `npm i @capacitor/core @capacitor/cli @capacitor/android`, `npx cap init`, set
+  `webDir: 'dist'`, `npm run build && npx cap sync`, then build the APK
+  (`npx cap open android` in Android Studio, or Gradle `assembleDebug`).
+- **[PWABuilder](https://www.pwabuilder.com)** / **Bubblewrap (TWA):** generate an Android
+  package from a PWA — but a **TWA still points at a hosted HTTPS URL**, so it doesn't remove
+  the host. Prefer Capacitor if the goal is "no host."
+
+**Cost/caveat:** building an APK needs the **Android SDK + JDK** installed (this machine has
+the JDK but not the Android SDK yet). It's a one-time toolchain setup; after that, rebuilding
+the APK is one command. We deferred this — pick it up when ready.
+
+---
+
 ## Installing on your phone (any option)
 
 Open the hosted **HTTPS** URL in Chrome on Android → menu (⋮) → **Add to Home screen**.
