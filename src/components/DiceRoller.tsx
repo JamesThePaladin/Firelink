@@ -74,6 +74,7 @@ export default function DiceRoller({ character, onClose }: Props) {
   const [result, setResult] = useState<RollResult | null>(null)
   const [dodgeResult, setDodgeResult] = useState<RollResult | null>(null)
   const [sunless, setSunless] = useState(true)
+  const [isDefence, setIsDefence] = useState(false)
   const [history, setHistory] = useState<{ label: string; result: string }[]>([])
   const [handTab, setHandTab] = useState<HandSource | null>(null)
 
@@ -164,7 +165,8 @@ export default function DiceRoller({ character, onClose }: Props) {
   }, [pool])
   const mainSize = poolSize(mainPool)
   const manualGreen = pool.green ?? 0
-  const greenToRoll = manualGreen + (sunless ? defence.dodge : 0)
+  // Gear dodge auto-rolls only on defence rolls (Block/Resist); manual green always does.
+  const greenToRoll = manualGreen + (sunless && isDefence ? defence.dodge : 0)
   const canRoll = mainSize > 0 || greenToRoll > 0
   const rollLabel = [
     mainSize > 0 ? poolLabel(mainPool) + fmtMod(modifier) : '',
@@ -183,11 +185,12 @@ export default function DiceRoller({ character, onClose }: Props) {
     })
   }
 
-  function applyPreset(p: { pool: DicePool; modifier: number }) {
+  function applyPreset(p: { pool: DicePool; modifier: number }, defenceRoll = false) {
     setPool(p.pool)
     setModifier(p.modifier)
     setResult(null)
     setDodgeResult(null)
+    setIsDefence(defenceRoll)
   }
 
   function doRoll() {
@@ -227,7 +230,7 @@ export default function DiceRoller({ character, onClose }: Props) {
       >
         <span className="text-sm text-ash-300">
           Sunless City{' '}
-          <span className="text-ash-500">— roll dodge with every roll</span>
+          <span className="text-ash-500">— roll dodge on defence rolls</span>
         </span>
         <span
           className={`flex h-6 w-11 flex-none items-center rounded-full px-0.5 transition ${
@@ -285,7 +288,7 @@ export default function DiceRoller({ character, onClose }: Props) {
             {defence.presets.map((p, i) => (
               <button
                 key={i}
-                onClick={() => applyPreset(p)}
+                onClick={() => applyPreset(p, true)}
                 className="flex items-center justify-between rounded-md border border-ash-700 bg-ash-850 px-2 py-1.5 text-left active:bg-ash-800"
               >
                 <span className="text-sm text-soul-400">{p.label}</span>
