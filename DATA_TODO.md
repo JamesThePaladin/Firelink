@@ -10,9 +10,8 @@ All 10 classes transcribed from the physical boards (Tabletop Sim captures, 2026
 - [x] **Stat tiers** (`statTiers`) — real Base/T1/T2/T3 values from each board.
 - [x] **Heroic Action** (`heroicAction.name` + `.text`) — transcribed.
 - [x] **Taunt** (`taunt`) — from each board's taunt token.
-- [ ] **Die colour on die-granting heroics** — Warrior (black) and Pyromancer (orange)
-      read from the art; **Sorcerer's Spell Fury die colour is unconfirmed** (written
-      generically as "1 die").
+- [x] **Heroic Action symbols resolved** — Warrior grants a black die, Pyromancer an
+      orange die; Sorcerer's Spell Fury grants infinite range (not a die).
 
 ## 2. Equipment — `src/data/equipment.ts` (auto-generated, 375 items)
 Now imported from the user's richer copy of the Mathog sheet

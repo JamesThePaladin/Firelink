@@ -6,8 +6,8 @@ import type { ClassBoard } from '../types'
 // A class can ship in several boxes; sets[0] is the display set (ordered to the
 // box you own). Starting kit lives in STARTING_EQUIPMENT (src/data/equipment.ts).
 //
-// TODO(confirm): the die colour granted by the three die-boosting heroics
-//   (Warrior=black, Pyromancer=orange — read from art; Sorcerer=unconfirmed).
+// Die-granting heroics: Warrior gains a black die, Pyromancer an orange die.
+// (Sorcerer's Spell Fury grants infinite range, not a die.)
 
 export const CLASSES: ClassBoard[] = [
   // ---- The Sunless City (also Original Core) ----
@@ -94,7 +94,7 @@ export const CLASSES: ClassBoard[] = [
     },
     heroicAction: {
       name: 'Spell Fury',
-      text: 'Once per spark when the Sorcerer makes a magic attack, it gains 1 die and its Stamina cost is reduced by 3.',
+      text: 'Once per spark, when the Sorcerer makes a magic attack, it gains infinite range and its Stamina cost is reduced by 3.',
     },
     taunt: 5,
   },
