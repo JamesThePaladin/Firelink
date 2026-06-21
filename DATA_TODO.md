@@ -1,8 +1,10 @@
 # Data TODO — values that still need real numbers
 
-The app's logic is complete; what's left is replacing placeholder/approximate data
-with verified values from the physical components. Nothing below is confirmed yet.
-Everything lives in plain data files and hot-reloads — no in-app editing.
+All core data is now verified from the physical components: class boards (stat
+tiers, Heroic Actions, taunt), all four dice, and the equipment catalog (stat
+requirements, handedness, actions). What's left is the upgrade-attach feature
+work, not missing numbers. Everything lives in plain data files and hot-reloads —
+no in-app editing.
 
 ## 1. Class boards — `src/data/classes.ts`
 All 10 classes transcribed from the physical boards (Tabletop Sim captures, 2026-06-20):
@@ -41,8 +43,8 @@ corrections into the generator (`scripts/generate_equipment.py`), not the output
 ## 3. Dice — `src/data/dice.ts`
 - [x] Black / Blue / Orange faces — confirmed (this sheet's Dice tab gives matching
       min/max/avg: BLK 0–2 avg 1.167, BLU 1–3 avg 1.833, ORA 1–4 avg 2.5).
-- [ ] **Green (dodge) die** faces — current `[0,0,1,1,1,2]` is a guess; the die is
-      defensive and **not on any card**, so it must come from the physical die.
+- [x] **Green (dodge) die** — confirmed from the physical die: `[0,0,0,1,1,1]`
+      (3 blank faces + 3 dodge-symbol faces).
 
 ## How to hand me values
 Type them or send photos of the boards/cards/dice and I'll bake them into the files above.

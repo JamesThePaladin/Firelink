@@ -1,14 +1,13 @@
 import type { DiceColor } from '../types'
 
 // Each die has 6 faces; a face's value = number of success/damage symbols.
-// Ranges are confirmed (black 0-2, blue 1-3 all-success, orange 1-4 all-success,
-// green = dodge successes). The exact count of each face is a best-effort seed —
-// >>> VERIFY against your physical dice and edit this one table if needed. <<<
+// All four dice are confirmed: black/blue/orange from the Mathog sheet's Dice tab,
+// green (dodge) from the physical die.
 export const DIE_FACES: Record<DiceColor, number[]> = {
   black: [0, 1, 1, 1, 2, 2], // confirmed (Mathog sheet: min0/max2/avg1.2)
   blue: [1, 1, 2, 2, 2, 3], // confirmed (min1/max3/avg1.8)
   orange: [1, 2, 2, 3, 3, 4], // confirmed (min1/max4/avg2.5)
-  green: [0, 0, 1, 1, 1, 2], // TODO(verify): dodge die guess — not in sheet; confirm from physical die
+  green: [0, 0, 0, 1, 1, 1], // confirmed: 3 blank faces + 3 dodge-symbol faces
 }
 
 export const DIE_LABEL: Record<DiceColor, string> = {
