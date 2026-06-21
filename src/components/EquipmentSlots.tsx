@@ -37,6 +37,7 @@ export default function EquipmentSlots({
   const [picker, setPicker] = useState<Target | null>(null)
   const [upgradeFor, setUpgradeFor] = useState<Target | null>(null)
   const [detail, setDetail] = useState<Target | null>(null)
+  const [swapFrom, setSwapFrom] = useState<Target | null>(null)
   const [query, setQuery] = useState('')
   const [upgradeQuery, setUpgradeQuery] = useState('')
 
@@ -83,6 +84,43 @@ export default function EquipmentSlots({
     })
   }
 
+  // Exchange the items at two locations (hand <-> hand, or backup <-> hand) so
+  // you can move a backup weapon into a hand without rebuilding both slots.
+  function swap(a: Target, b: Target) {
+    update((d) => {
+      const get = (t: Target): EquippedItem | null =>
+        t.target === 'backup'
+          ? d.equipped.backup[t.index ?? -1] ?? null
+          : d.equipped[t.target as 'leftHand' | 'rightHand' | 'armour']
+      const set = (t: Target, v: EquippedItem | null) => {
+        if (t.target === 'backup') {
+          if (v) d.equipped.backup[t.index ?? 0] = v
+          else d.equipped.backup.splice(t.index ?? 0, 1)
+        } else {
+          d.equipped[t.target as 'leftHand' | 'rightHand' | 'armour'] = v
+        }
+      }
+      const ia = get(a)
+      const ib = get(b)
+      set(a, ib)
+      set(b, ia)
+      // A two-handed weapon must occupy a hand alone: if one landed in a hand
+      // while the other hand is full, bump the other hand's item to backup.
+      for (const hand of ['leftHand', 'rightHand'] as const) {
+        const it = d.equipped[hand]
+        const card = it ? getCard(it.cardId) : null
+        if (card && isTwoHanded(card)) {
+          const other = hand === 'leftHand' ? 'rightHand' : 'leftHand'
+          if (d.equipped[other]) {
+            d.equipped.backup.push(d.equipped[other]!)
+            d.equipped[other] = null
+          }
+        }
+      }
+    })
+    setSwapFrom(null)
+  }
+
   function mutateUpgrades(t: Target, fn: (cur: string[]) => string[]) {
     update((d) => {
       const it =
@@ -121,9 +159,31 @@ export default function EquipmentSlots({
     )
   }, [upgradeFor, pool, upgradeQuery, character.classId])
 
+  // Where the swapFrom item is allowed to go. To keep index math simple we only
+  // pair a backup item with the hand slots (and a hand with the other hand or a
+  // backup item) — never backup<->backup.
+  const swapTargets = useMemo(() => {
+    if (!swapFrom) return []
+    const list: { t: Target; label: string; item: EquippedItem | null }[] = []
+    for (const [hand, label] of [
+      ['leftHand', 'Left Hand'],
+      ['rightHand', 'Right Hand'],
+    ] as const) {
+      if (swapFrom.target === hand) continue
+      list.push({ t: { target: hand }, label, item: character.equipped[hand] })
+    }
+    if (swapFrom.target !== 'backup') {
+      character.equipped.backup.forEach((it, i) =>
+        list.push({ t: { target: 'backup', index: i }, label: `Backup ${i + 1}`, item: it }),
+      )
+    }
+    return list
+  }, [swapFrom, character])
+
   const panelProps = {
     statValues,
     onDetail: (t: Target) => setDetail(t),
+    onSwap: (t: Target) => setSwapFrom(t),
     onChange: (t: Target) => setPicker(t),
     onUnequip: unequip,
     onAttach: (t: Target) => {
@@ -333,6 +393,42 @@ export default function EquipmentSlots({
           )}
         </Modal>
       )}
+
+      {/* ---- Swap chooser ---- */}
+      {swapFrom &&
+        (() => {
+          const fromItem = itemForTarget(swapFrom)
+          const fromCard = fromItem ? getCard(fromItem.cardId) : null
+          return (
+            <Modal
+              title={`Swap ${fromCard?.name ?? 'item'} with…`}
+              onClose={() => setSwapFrom(null)}
+            >
+              {swapTargets.length === 0 && (
+                <p className="text-sm text-ash-500">Nowhere to swap to.</p>
+              )}
+              <div className="flex flex-col gap-2">
+                {swapTargets.map(({ t, label, item }) => {
+                  const c = item ? getCard(item.cardId) : null
+                  return (
+                    <button
+                      key={`${t.target}-${t.index ?? ''}`}
+                      onClick={() => swap(swapFrom, t)}
+                      className="rounded-lg border border-ash-700 bg-ash-850 p-2 text-left active:bg-ash-800"
+                    >
+                      <div className="text-[10px] uppercase tracking-wide text-ash-500">
+                        {label}
+                      </div>
+                      <div className="font-serif text-soul-400">
+                        {c ? c.name : <span className="text-ash-600">Empty</span>}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </Modal>
+          )
+        })()}
     </section>
   )
 }
@@ -340,6 +436,7 @@ export default function EquipmentSlots({
 interface PanelProps {
   statValues: Record<string, number>
   onDetail: (t: Target) => void
+  onSwap: (t: Target) => void
   onChange: (t: Target) => void
   onUnequip: (t: Target) => void
   onAttach: (t: Target) => void
@@ -385,6 +482,7 @@ function EquippedPanel({
   item,
   statValues,
   onDetail,
+  onSwap,
   onChange,
   onUnequip,
   onAttach,
@@ -422,6 +520,14 @@ function EquippedPanel({
           </div>
         </button>
         <div className="flex flex-none gap-2 text-xs">
+          {target.target !== 'armour' && (
+            <button
+              onClick={() => onSwap(target)}
+              className="text-ash-400 active:text-ash-200"
+            >
+              Swap
+            </button>
+          )}
           <button
             onClick={() => onChange(target)}
             className="text-ash-400 active:text-ash-200"
