@@ -14,14 +14,12 @@ import {
 } from '../db/characters'
 import { getClass } from '../data'
 import { SETS } from '../data/sets'
-import { useOwnedSets } from '../lib/settings'
 import type { Character } from '../types'
 
 export default function Board() {
   const { id } = useParams()
   const navigate = useNavigate()
   const character = useCharacter(id)
-  const { ownedSets } = useOwnedSets()
   const [rolling, setRolling] = useState(false)
   const [menu, setMenu] = useState(false)
 
@@ -108,12 +106,7 @@ export default function Board() {
         <StatTrack character={character} cls={cls} update={update} />
         <EnduranceBar character={character} update={update} />
         <TokenRow character={character} cls={cls} update={update} />
-        <EquipmentSlots
-          character={character}
-          cls={cls}
-          ownedSets={ownedSets}
-          update={update}
-        />
+        <EquipmentSlots character={character} cls={cls} update={update} />
       </main>
 
       {/* Dice FAB */}

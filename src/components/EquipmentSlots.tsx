@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { Character, ClassBoard, EquippedItem, SetId } from '../types'
-import { getCard, equipmentForSets } from '../data'
+import type { Character, ClassBoard, EquippedItem } from '../types'
+import { getCard, EQUIPMENT } from '../data'
 import {
   currentStatValues,
   meetsRequirement,
@@ -19,7 +19,6 @@ import {
 interface Props {
   character: Character
   cls: ClassBoard
-  ownedSets: SetId[]
   update: (mut: (draft: Character) => void) => void
 }
 
@@ -28,12 +27,7 @@ type Target = { target: SlotTarget; index?: number }
 
 const MAX_WEAPONS = 3
 
-export default function EquipmentSlots({
-  character,
-  cls,
-  ownedSets,
-  update,
-}: Props) {
+export default function EquipmentSlots({ character, cls, update }: Props) {
   const [picker, setPicker] = useState<Target | null>(null)
   const [upgradeFor, setUpgradeFor] = useState<Target | null>(null)
   const [detail, setDetail] = useState<Target | null>(null)
@@ -52,7 +46,7 @@ export default function EquipmentSlots({
     () => currentStatValues(character, cls),
     [character, cls],
   )
-  const pool = useMemo(() => equipmentForSets(ownedSets), [ownedSets])
+  const pool = EQUIPMENT
 
   function equip(t: Target, cardId: string) {
     update((d) => {

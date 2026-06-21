@@ -1,32 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TopBar from '../components/TopBar'
-import { useOwnedSets } from '../lib/settings'
-import { classesForSets } from '../data'
-import { SETS } from '../data/sets'
+import { CLASSES } from '../data'
 import { addCharacter, makeCharacter } from '../db/characters'
-import type { SetId } from '../types'
 
 export default function CreateCharacter() {
-  const { ownedSets } = useOwnedSets()
   const navigate = useNavigate()
   const [classId, setClassId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const classes = useMemo(() => classesForSets(ownedSets), [ownedSets])
-  const grouped = useMemo(() => {
-    const map = new Map<SetId, typeof classes>()
-    for (const c of classes) {
-      const key = c.sets[0]
-      const arr = map.get(key) ?? []
-      arr.push(c)
-      map.set(key, arr)
-    }
-    return map
-  }, [classes])
-
-  const selected = classes.find((c) => c.id === classId)
+  const selected = CLASSES.find((c) => c.id === classId)
 
   async function create() {
     if (!classId || busy) return
@@ -52,34 +36,27 @@ export default function CreateCharacter() {
 
         <section>
           <h2 className="mb-2 font-serif text-soul-400">Choose a class</h2>
-          {[...grouped.entries()].map(([set, list]) => (
-            <div key={set} className="mb-4">
-              <p className="mb-2 text-xs uppercase tracking-wider text-ash-500">
-                {SETS[set].name}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {list.map((c) => {
-                  const on = c.id === classId
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => setClassId(c.id)}
-                      className={`rounded-lg border p-3 text-left ${
-                        on
-                          ? 'border-ember-500 bg-ash-800'
-                          : 'border-ash-700 bg-ash-900 active:bg-ash-850'
-                      }`}
-                    >
-                      <div className="font-serif text-soul-400">{c.name}</div>
-                      <div className="mt-1 text-[11px] leading-snug text-ash-500">
-                        {c.blurb}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 gap-2">
+            {CLASSES.map((c) => {
+              const on = c.id === classId
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setClassId(c.id)}
+                  className={`rounded-lg border p-3 text-left ${
+                    on
+                      ? 'border-ember-500 bg-ash-800'
+                      : 'border-ash-700 bg-ash-900 active:bg-ash-850'
+                  }`}
+                >
+                  <div className="font-serif text-soul-400">{c.name}</div>
+                  <div className="mt-1 text-[11px] leading-snug text-ash-500">
+                    {c.blurb}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </section>
 
         {selected && (
