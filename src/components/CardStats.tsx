@@ -38,14 +38,9 @@ export default function CardStats({ card, statValues, compact }: Props) {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ash-400">
-        {card.source && card.source !== 'base' && (
-          <span className="text-ember-400">{card.source}</span>
-        )}
-        {card.upgradeSlots != null && card.upgradeSlots > 0 && (
-          <span>Upgrades {card.upgradeSlots}</span>
-        )}
-      </div>
+      {card.source && card.source !== 'base' && (
+        <div className="text-xs text-ember-400">{card.source}</div>
+      )}
 
       {reqEntries.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1 text-[11px]">
