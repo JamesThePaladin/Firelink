@@ -25,11 +25,6 @@ function mergePool(into: DicePool, add: DicePool) {
   }
 }
 
-function withGreen(pool: DicePool, green: number): DicePool {
-  const out = { ...pool }
-  if (green > 0) out.green = (out.green ?? 0) + green
-  return out
-}
 
 interface Props {
   character: Character
@@ -87,10 +82,12 @@ export default function DiceRoller({ character, onClose }: Props) {
     return out
   }, [character.equipped])
 
-  // Your defence roll is the AGGREGATE of all worn/held gear: armour + both hands
-  // (plus their attached upgrades). For a physical attack you roll all block dice +
-  // dodge dice together; for magic, all resist dice + dodge dice. Backup gear is
-  // sheathed and doesn't contribute. Havel's Greatshield disables dodging entirely.
+  // Your defence is the AGGREGATE of all worn/held gear: armour + both hands (plus
+  // their attached upgrades). When attacked you make ONE choice — block (physical),
+  // resist (magic), or dodge — so these are three independent rolls, not combined.
+  // Dodge is wholly gear-derived (0 is valid; per the rules FAQ you can still take the
+  // dodge action, just with no dice). Backup gear is sheathed and doesn't contribute.
+  // Havel's Greatshield disables dodging entirely.
   const defence = useMemo(() => {
     const block: DicePool = {}
     const resist: DicePool = {}
@@ -121,13 +118,11 @@ export default function DiceRoller({ character, onClose }: Props) {
     if (noDodge) dodge = 0
 
     const presets: { label: string; pool: DicePool; modifier: number }[] = []
-    const hasBlock = poolSize(block) > 0
-    const hasResist = poolSize(resist) > 0
-    if (hasBlock)
-      presets.push({ label: 'Block — physical', pool: withGreen(block, dodge), modifier: blockMod })
-    if (hasResist)
-      presets.push({ label: 'Resist — magic', pool: withGreen(resist, dodge), modifier: resistMod })
-    if (!hasBlock && !hasResist && dodge > 0)
+    if (poolSize(block) > 0)
+      presets.push({ label: 'Block — physical', pool: block, modifier: blockMod })
+    if (poolSize(resist) > 0)
+      presets.push({ label: 'Resist — magic', pool: resist, modifier: resistMod })
+    if (dodge > 0)
       presets.push({ label: 'Dodge', pool: { green: dodge }, modifier: 0 })
     return { presets, noDodge, dodge }
   }, [character.equipped])
