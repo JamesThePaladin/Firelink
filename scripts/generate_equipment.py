@@ -45,7 +45,6 @@ SOURCE = {'Transposed': 'transposed', 'Legendary': 'legendary', 'Mini Boss': 'mi
 EFFECTS = ['node', 'bleed', 'poison', 'frost', 'stagger', 'push', 'move', 'buff', 'shaft', 'repeat']
 ACT_BASE = {'1': 'GB', '2': 'GU', '3': 'HN'}
 HAND_KINDS = {'weapon', 'shield', 'spell'}
-GEAR_KINDS = {'weapon', 'shield', 'spell', 'armour'}  # has 2 upgrade slots
 
 
 def num(s):
@@ -140,8 +139,9 @@ def main():
             item['classId'] = cls.lower()
         if req:
             item['req'] = req
-        if kind in GEAR_KINDS:
-            item['upgradeSlots'] = 2
+        slots = num(cell(rn, 'FX'))  # 'Slots Num' — real per-item upgrade-slot count
+        if slots:
+            item['upgradeSlots'] = int(slots)
         if src:
             item['source'] = src
         if acts:

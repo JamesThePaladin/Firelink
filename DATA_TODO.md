@@ -27,6 +27,9 @@ Still to verify / build out:
 
 - [x] **Stat requirements** (`req`) — imported (AI–AL on the sheet).
 - [x] **Handedness** (`hands: 1 | 2`) — imported from the `2H` flag.
+- [x] **Upgrade slots** (`upgradeSlots`) — real per-item count imported from the sheet's
+      `Slots Num` column (FX): 1 or 2 for most weapons/armour/shields, none for spells and
+      basic starting gear. (Previously hardcoded to 2.)
 - [x] **Upgrade-attach mechanic** — rings + gems/titanite (`kind: 'ring' | 'upgrade'`)
       attach into each gear item's upgrade slots (inline UI, gated by stat req + class).
       Any upgrade can go in any slot for now; fine-grained rules can come later if needed.

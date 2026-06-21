@@ -12,32 +12,39 @@ interface Props {
   onClose: () => void
 }
 
+type HandSource = 'leftHand' | 'rightHand' | 'backup'
+
 interface Preset {
   label: string
   pool: DicePool
   modifier: number
   text?: string
+  source: HandSource
 }
 
 const ALL_DICE: DiceColor[] = [...ATTACK_DICE, 'green']
+
+const HAND_LABEL: Record<HandSource, string> = {
+  leftHand: 'Left Hand',
+  rightHand: 'Right Hand',
+  backup: 'Backup',
+}
+const HAND_ORDER: HandSource[] = ['leftHand', 'rightHand', 'backup']
 
 export default function DiceRoller({ character, onClose }: Props) {
   const [pool, setPool] = useState<DicePool>({})
   const [modifier, setModifier] = useState(0)
   const [result, setResult] = useState<RollResult | null>(null)
   const [history, setHistory] = useState<{ label: string; total: number }[]>([])
+  const [handTab, setHandTab] = useState<HandSource | null>(null)
 
-  // Build presets from every equipped weapon's actions.
+  // Build presets from every equipped weapon's actions, tagged by hand.
   const presets = useMemo<Preset[]>(() => {
-    const items = [
-      character.equipped.leftHand,
-      character.equipped.rightHand,
-      ...character.equipped.backup,
-    ].filter(Boolean)
     const out: Preset[] = []
-    for (const it of items) {
-      const card = getCard(it!.cardId)
-      if (!card?.actions) continue
+    const add = (item: { cardId: string } | null, source: HandSource) => {
+      if (!item) return
+      const card = getCard(item.cardId)
+      if (!card?.actions) return
       for (const a of card.actions) {
         if (poolSize(a.dice) === 0) continue // skip non-dice actions (e.g. pure heals)
         out.push({
@@ -45,11 +52,21 @@ export default function DiceRoller({ character, onClose }: Props) {
           pool: a.dice,
           modifier: a.modifier ?? 0,
           text: a.text,
+          source,
         })
       }
     }
+    add(character.equipped.leftHand, 'leftHand')
+    add(character.equipped.rightHand, 'rightHand')
+    for (const b of character.equipped.backup) add(b, 'backup')
     return out
   }, [character.equipped])
+
+  // Which hands actually have rollable actions, and the active tab.
+  const handSources = HAND_ORDER.filter((s) => presets.some((p) => p.source === s))
+  const activeHand =
+    handTab && handSources.includes(handTab) ? handTab : (handSources[0] ?? null)
+  const shownPresets = presets.filter((p) => p.source === activeHand)
 
   function bump(color: DiceColor, delta: number) {
     setPool((p) => {
@@ -84,8 +101,25 @@ export default function DiceRoller({ character, onClose }: Props) {
       {presets.length > 0 && (
         <div className="mb-4">
           <p className="mb-1 text-xs text-ash-500">Equipped weapon actions</p>
+          {handSources.length > 1 && (
+            <div className="mb-2 flex gap-1 rounded-md border border-ash-700 bg-ash-900 p-1">
+              {handSources.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setHandTab(s)}
+                  className={`flex-1 rounded px-2 py-1 text-xs ${
+                    s === activeHand
+                      ? 'bg-ember-600 font-semibold text-ash-950'
+                      : 'text-ash-300 active:bg-ash-800'
+                  }`}
+                >
+                  {HAND_LABEL[s]}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
-            {presets.map((p, i) => (
+            {shownPresets.map((p, i) => (
               <button
                 key={i}
                 onClick={() => applyPreset(p)}
