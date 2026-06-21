@@ -62,6 +62,27 @@ export default function DiceRoller({ character, onClose }: Props) {
     return out
   }, [character.equipped])
 
+  // Defensive rolls (block / resist / dodge) from every equipped piece, incl. armour.
+  const defencePresets = useMemo(() => {
+    const out: { label: string; pool: DicePool; modifier: number }[] = []
+    const add = (item: { cardId: string } | null) => {
+      const d = item && getCard(item.cardId)?.defence
+      const name = item && getCard(item.cardId)?.name
+      if (!d || !name) return
+      if (d.block && poolSize(d.block.dice) > 0)
+        out.push({ label: `${name} · Block`, pool: d.block.dice, modifier: d.block.modifier ?? 0 })
+      if (d.resist && poolSize(d.resist.dice) > 0)
+        out.push({ label: `${name} · Resist`, pool: d.resist.dice, modifier: d.resist.modifier ?? 0 })
+      if (d.dodge)
+        out.push({ label: `${name} · Dodge`, pool: { green: d.dodge }, modifier: 0 })
+    }
+    add(character.equipped.armour)
+    add(character.equipped.leftHand)
+    add(character.equipped.rightHand)
+    for (const b of character.equipped.backup) add(b)
+    return out
+  }, [character.equipped])
+
   // Which hands actually have rollable actions, and the active tab.
   const handSources = HAND_ORDER.filter((s) => presets.some((p) => p.source === s))
   const activeHand =
@@ -78,7 +99,7 @@ export default function DiceRoller({ character, onClose }: Props) {
     })
   }
 
-  function applyPreset(p: Preset) {
+  function applyPreset(p: { pool: DicePool; modifier: number }) {
     setPool(p.pool)
     setModifier(p.modifier)
     setResult(null)
@@ -120,6 +141,27 @@ export default function DiceRoller({ character, onClose }: Props) {
           )}
           <div className="flex flex-col gap-1">
             {shownPresets.map((p, i) => (
+              <button
+                key={i}
+                onClick={() => applyPreset(p)}
+                className="flex items-center justify-between rounded-md border border-ash-700 bg-ash-850 px-2 py-1.5 text-left active:bg-ash-800"
+              >
+                <span className="text-sm text-soul-400">{p.label}</span>
+                <span className="text-xs text-ash-400">
+                  {poolLabel(p.pool)}
+                  {fmtMod(p.modifier)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {defencePresets.length > 0 && (
+        <div className="mb-4">
+          <p className="mb-1 text-xs text-ash-500">Defence — block / resist / dodge</p>
+          <div className="flex flex-col gap-1">
+            {defencePresets.map((p, i) => (
               <button
                 key={i}
                 onClick={() => applyPreset(p)}
