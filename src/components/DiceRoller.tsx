@@ -151,7 +151,27 @@ export default function DiceRoller({ character, onClose }: Props) {
     handTab && handSources.includes(handTab) ? handTab : (handSources[0] ?? null)
   const shownPresets = presets.filter((p) => p.source === activeHand)
 
-  const rollsDodge = sunless && defence.dodge > 0
+  // Split the pool into damage dice (black/blue/orange) and dodge dice. Green never
+  // counts toward a damage total, so manual green dice roll into the dodge result
+  // alongside the gear aggregate (and the Sunless City auto-roll).
+  const mainPool = useMemo(() => {
+    const m: DicePool = {}
+    for (const c of ATTACK_DICE) {
+      const v = pool[c]
+      if (v) m[c] = v
+    }
+    return m
+  }, [pool])
+  const mainSize = poolSize(mainPool)
+  const manualGreen = pool.green ?? 0
+  const greenToRoll = manualGreen + (sunless ? defence.dodge : 0)
+  const canRoll = mainSize > 0 || greenToRoll > 0
+  const rollLabel = [
+    mainSize > 0 ? poolLabel(mainPool) + fmtMod(modifier) : '',
+    greenToRoll > 0 ? `${greenToRoll} dodge` : '',
+  ]
+    .filter(Boolean)
+    .join(' + ')
 
   function bump(color: DiceColor, delta: number) {
     setPool((p) => {
@@ -171,22 +191,16 @@ export default function DiceRoller({ character, onClose }: Props) {
   }
 
   function doRoll() {
-    if (poolSize(pool) === 0) return
-    const r = rollPool(pool, modifier)
+    if (!canRoll) return
+    const r = mainSize > 0 ? rollPool(mainPool, modifier) : null
     setResult(r)
-    let dodgeStr = ''
-    if (rollsDodge) {
-      const dr = rollPool({ green: defence.dodge }, 0)
-      setDodgeResult(dr)
-      dodgeStr = ` · ${dr.sum} dodge`
-    } else {
-      setDodgeResult(null)
-    }
+    const dr = greenToRoll > 0 ? rollPool({ green: greenToRoll }, 0) : null
+    setDodgeResult(dr)
+    const parts: string[] = []
+    if (r) parts.push(`${r.total}`)
+    if (dr) parts.push(`${dr.sum} dodge`)
     setHistory((h) =>
-      [
-        { label: poolLabel(pool) + fmtMod(modifier), result: `${r.total}${dodgeStr}` },
-        ...h,
-      ].slice(0, 6),
+      [{ label: rollLabel, result: parts.join(' · ') }, ...h].slice(0, 6),
     )
   }
 
@@ -311,9 +325,9 @@ export default function DiceRoller({ character, onClose }: Props) {
         ) : null}
       </div>
 
-      {/* Manual pool builder (attack/block dice — dodge is handled above) */}
+      {/* Manual pool builder — add any dice, including extra dodge dice. */}
       <div className="mb-3 grid grid-cols-2 gap-2">
-        {ATTACK_DICE.map((color) => (
+        {DEF_DICE.map((color) => (
           <div
             key={color}
             className="flex items-center justify-between rounded-md border border-ash-700 bg-ash-900 p-1"
@@ -366,12 +380,10 @@ export default function DiceRoller({ character, onClose }: Props) {
 
       <button
         onClick={doRoll}
-        disabled={poolSize(pool) === 0}
+        disabled={!canRoll}
         className="w-full rounded-lg bg-ember-600 py-3 font-serif text-lg font-semibold text-ash-950 disabled:opacity-40 active:bg-ember-500"
       >
-        Roll {poolLabel(pool)}
-        {fmtMod(modifier)}
-        {rollsDodge && poolSize(pool) > 0 ? ` + ${defence.dodge} dodge` : ''}
+        Roll {rollLabel}
       </button>
 
       {result && (
@@ -391,10 +403,6 @@ export default function DiceRoller({ character, onClose }: Props) {
           <DiceFaces dice={dodgeResult.dice} />
           <div className="mt-2 font-serif text-2xl text-green-400">
             {dodgeResult.sum}
-          </div>
-          <div className="text-xs text-ash-500">
-            dodge {dodgeResult.sum === 1 ? 'success' : 'successes'} (separate — does
-            not reduce damage)
           </div>
         </div>
       )}
