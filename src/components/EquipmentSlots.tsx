@@ -189,17 +189,25 @@ export default function EquipmentSlots({
               return (
                 <button
                   key={c.id}
-                  onClick={() => equip(picker, c.id)}
+                  disabled={!ok}
+                  onClick={() => ok && equip(picker, c.id)}
                   className={`rounded-lg border p-2 text-left ${
                     ok
                       ? 'border-ash-700 bg-ash-850 active:bg-ash-800'
-                      : 'border-blood-600/40 bg-ash-900'
+                      : 'cursor-not-allowed border-blood-600/40 bg-ash-900 opacity-60'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-serif text-soul-400">{c.name}</span>
-                    {c.source && c.source !== 'base' && (
-                      <span className="text-[10px] text-ember-400">{c.source}</span>
+                    {!ok ? (
+                      <span className="text-[10px] uppercase tracking-wide text-blood-500">
+                        Requirements not met
+                      </span>
+                    ) : (
+                      c.source &&
+                      c.source !== 'base' && (
+                        <span className="text-[10px] text-ember-400">{c.source}</span>
+                      )
                     )}
                   </div>
                   <CardStats card={c} statValues={statValues} compact />

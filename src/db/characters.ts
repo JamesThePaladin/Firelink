@@ -1,24 +1,27 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
-import { getCard, getClass } from '../data'
-import { isArmour } from '../lib/character'
-import type { Character, ClassBoard, EquippedItem } from '../types'
+import { getCard, getClass, startingEquipmentFor } from '../data'
+import { isArmour, isTwoHanded } from '../lib/character'
+import type { Character, EquippedItem } from '../types'
 
 function emptyEquipped(): Character['equipped'] {
   return { armour: null, leftHand: null, rightHand: null, backup: [] }
 }
 
-function placeStartingEquipment(cls: ClassBoard): Character['equipped'] {
+function placeStartingEquipment(classId: string): Character['equipped'] {
   const eq = emptyEquipped()
-  for (const id of cls.startingEquipment) {
+  for (const id of startingEquipmentFor(classId)) {
     const card = getCard(id)
     if (!card) continue
     const item: EquippedItem = { cardId: id, upgrades: [] }
     if (isArmour(card)) {
       eq.armour = item
+    } else if (isTwoHanded(card) && !eq.leftHand && !eq.rightHand) {
+      // Two-handed: takes both hands.
+      eq.leftHand = item
     } else if (!eq.leftHand) {
       eq.leftHand = item
-    } else if (!eq.rightHand) {
+    } else if (!eq.rightHand && !isTwoHanded(getCard(eq.leftHand.cardId)!)) {
       eq.rightHand = item
     } else {
       eq.backup.push(item)
@@ -43,7 +46,7 @@ export function makeCharacter(name: string, classId: string): Character {
     damageCubes: 0,
     souls: 0,
     tokens: { estus: 'full', luck: 'ready', heroic: 'ready', ember: 'none' },
-    equipped: placeStartingEquipment(cls),
+    equipped: placeStartingEquipment(classId),
     notes: '',
   }
 }

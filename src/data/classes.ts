@@ -26,7 +26,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Ignore all damage from the next enemy attack that targets you this encounter.',
     },
     taunt: 3,
-    startingEquipment: [],
   },
   {
     id: 'herald',
@@ -44,7 +43,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'A character on your node or adjacent removes up to 3 red cubes from their endurance bar.',
     },
     taunt: 2,
-    startingEquipment: [],
   },
   {
     id: 'pyromancer',
@@ -62,7 +60,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Deal 2 magic damage to every enemy on your node and adjacent nodes.',
     },
     taunt: 1,
-    startingEquipment: [],
   },
 
   // ---- Characters Expansion ----
@@ -82,7 +79,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Every ally at range removes up to 2 red cubes from their endurance bar.',
     },
     taunt: 2,
-    startingEquipment: [],
   },
   {
     id: 'sorcerer',
@@ -100,7 +96,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Deal 1 magic damage to each of up to 3 different enemies within range.',
     },
     taunt: 1,
-    startingEquipment: [],
   },
   {
     id: 'mercenary',
@@ -118,7 +113,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Make an extra weapon attack this turn without spending Stamina.',
     },
     taunt: 2,
-    startingEquipment: [],
   },
   {
     id: 'thief',
@@ -136,7 +130,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Your next attack this turn rolls one additional die of its highest type.',
     },
     taunt: 1,
-    startingEquipment: [],
   },
   {
     id: 'deprived',
@@ -154,7 +147,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Gain 2 Stamina (remove 2 black cubes), then make a weapon attack.',
     },
     taunt: 1,
-    startingEquipment: [],
   },
 
   // ---- Original Core Set ----
@@ -174,7 +166,6 @@ export const CLASSES: ClassBoard[] = [
       text: 'Until your next turn, reduce all damage you suffer by 1.',
     },
     taunt: 3,
-    startingEquipment: [],
   },
   {
     id: 'assassin',
@@ -192,6 +183,5 @@ export const CLASSES: ClassBoard[] = [
       text: 'Move up to 2 nodes, then make a weapon attack that ignores the target’s block.',
     },
     taunt: 1,
-    startingEquipment: [],
   },
 ]

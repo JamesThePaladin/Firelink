@@ -1,5 +1,5 @@
 import { CLASSES } from './classes'
-import { EQUIPMENT } from './equipment'
+import { EQUIPMENT, STARTING_EQUIPMENT } from './equipment'
 import type {
   ClassBoard,
   EquipmentCard,
@@ -19,6 +19,11 @@ export function getCard(id: string): EquipmentCard | undefined {
   return equipById.get(id)
 }
 
+/** Card ids a class starts equipped with (from the sheet's Base Item flag). */
+export function startingEquipmentFor(classId: string): string[] {
+  return STARTING_EQUIPMENT[classId] ?? []
+}
+
 export function classesForSets(sets: SetId[]): ClassBoard[] {
   const enabled = new Set(sets)
   return CLASSES.filter((c) => c.sets.some((s) => enabled.has(s)))
@@ -34,4 +39,4 @@ export function statValueAt(cls: ClassBoard, stat: StatKey, tier: Tier): number 
   return cls.statTiers[stat][tier]
 }
 
-export { CLASSES, EQUIPMENT }
+export { CLASSES, EQUIPMENT, STARTING_EQUIPMENT }

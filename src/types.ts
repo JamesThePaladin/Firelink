@@ -151,7 +151,8 @@ export interface ClassBoard {
   statTiers: Record<StatKey, [number, number, number, number]>
   heroicAction: { name: string; text: string }
   taunt: number
-  startingEquipment: string[]
+  // Starting/default loadout lives in STARTING_EQUIPMENT (generated from the sheet),
+  // keyed by class id — see src/data/equipment.ts.
 }
 
 // ---- Persisted character state ------------------------------------------

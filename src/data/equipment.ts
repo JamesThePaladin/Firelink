@@ -386,3 +386,18 @@ export const EQUIPMENT: EquipmentCard[] = [
   { id: 'witch-s-locks', name: 'Witch\'s Locks', sets: ['iron-keep'], kind: 'weapon', hands: 1, req: { int: 31 }, upgradeSlots: 2, actions: [{ stamina: 1, dice: { blue: 1 }, range: 1, magic: true }, { stamina: 4, dice: { black: 1, blue: 1 }, range: 1, magic: true }] },
   { id: 'zweihander', name: 'Zweihander', sets: ['core', 'tomb-of-giants'], kind: 'weapon', hands: 2, req: { str: 35, dex: 25 }, upgradeSlots: 2, actions: [{ stamina: 2, dice: { black: 1, blue: 2 }, range: 1 }, { stamina: 5, dice: { black: 1, orange: 2 }, range: 1 }] },
 ]
+
+// Each class's starting/default loadout (sheet 'Base Item' flag, col Y),
+// ordered armour, weapon(s), spell, shield. Auto-equipped on creation.
+export const STARTING_EQUIPMENT: Record<string, string[]> = {
+  'assassin': ['assassin-armor', 'estoc', 'target-shield'],
+  'cleric': ['cleric-robes', 'mace', 'sacred-chime', 'blue-wooden-shield'],
+  'deprived': ['loincloth', 'club', 'plank-shield'],
+  'herald': ['herald-armor', 'spear', 'talisman', 'kite-shield'],
+  'knight': ['knight-armor', 'long-sword', 'kite-shield-2'],
+  'mercenary': ['sellsword-armor', 'sellsword-twinblade', 'sellsword-twinblade-2', 'wooden-shield'],
+  'pyromancer': ['pyromancer-garb', 'hand-axe', 'pyromancy-flame', 'caduceous-round-shield'],
+  'sorcerer': ['sorcerer-robes', 'mail-breaker', 'sorcerer-s-catalyst', 'leather-shield'],
+  'thief': ['deserter-armor', 'bandit-knife', 'shortbow', 'iron-round-shield'],
+  'warrior': ['northern-armor', 'battle-axe', 'round-shield'],
+}
