@@ -1,12 +1,13 @@
 import type { ClassBoard } from '../types'
 
-// TODO(verify): NONE of the numbers/text below are confirmed yet.
-//   - statTiers:    APPROXIMATE (close, not exact) — replace from character boards.
-//   - heroicAction: placeholder text — replace from boards.
-//   - taunt:        placeholder — replace from boards.
-// Class identity, ids and set membership are settled. A class can ship in
-// several boxes; sets[0] is the display set (ordered to the box you own).
-// See DATA_TODO.md.
+// Stat tiers, Heroic Action text, and taunt below are transcribed from the
+// physical class boards (Tabletop Sim captures, 2026-06-20). Stat values are the
+// numbers printed on each board's Base/Tier 1/Tier 2/Tier 3 track.
+// A class can ship in several boxes; sets[0] is the display set (ordered to the
+// box you own). Starting kit lives in STARTING_EQUIPMENT (src/data/equipment.ts).
+//
+// TODO(confirm): the die colour granted by the three die-boosting heroics
+//   (Warrior=black, Pyromancer=orange — read from art; Sorcerer=unconfirmed).
 
 export const CLASSES: ClassBoard[] = [
   // ---- The Sunless City (also Original Core) ----
@@ -16,16 +17,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Warrior',
     blurb: 'A frontline brawler who trades finesse for raw strength and staying power.',
     statTiers: {
-      str: [18, 24, 32, 40],
-      dex: [12, 18, 26, 35],
-      int: [10, 14, 20, 30],
-      fai: [12, 18, 26, 35],
+      str: [16, 23, 32, 40],
+      dex: [9, 16, 25, 35],
+      int: [8, 15, 23, 30],
+      fai: [9, 16, 25, 35],
     },
     heroicAction: {
-      name: 'Unyielding',
-      text: 'Ignore all damage from the next enemy attack that targets you this encounter.',
+      name: 'Berserk Charge',
+      text: 'Once per spark during his activation, the Warrior may move one node without spending Stamina. The next range 0 attack he makes costs 0 Stamina and gains 1 black die.',
     },
-    taunt: 3,
+    taunt: 9,
   },
   {
     id: 'herald',
@@ -33,16 +34,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Herald',
     blurb: 'A martial healer balancing sword and miracle to sustain the party.',
     statTiers: {
-      str: [14, 20, 28, 37],
-      dex: [12, 18, 26, 34],
-      int: [9, 14, 20, 29],
-      fai: [16, 22, 30, 40],
+      str: [12, 19, 28, 37],
+      dex: [11, 17, 26, 34],
+      int: [8, 12, 20, 29],
+      fai: [13, 22, 31, 40],
     },
     heroicAction: {
-      name: 'Lay On Hands',
-      text: 'A character on your node or adjacent removes up to 3 red cubes from their endurance bar.',
+      name: 'Perseverance',
+      text: 'Once per spark during his activation, the Herald may use Perseverance. When he does, each character gains 2 Stamina.',
     },
-    taunt: 2,
+    taunt: 4,
   },
   {
     id: 'pyromancer',
@@ -50,16 +51,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Pyromancer',
     blurb: 'Wields fire that punishes clustered foes from mid range.',
     statTiers: {
-      str: [13, 19, 27, 36],
-      dex: [13, 19, 27, 36],
-      int: [13, 20, 29, 38],
-      fai: [13, 20, 29, 38],
+      str: [12, 17, 26, 35],
+      dex: [9, 13, 20, 27],
+      int: [14, 21, 31, 40],
+      fai: [14, 19, 28, 38],
     },
     heroicAction: {
-      name: 'Combustion',
-      text: 'Deal 2 magic damage to every enemy on your node and adjacent nodes.',
+      name: 'Explosive Firepower',
+      text: 'Once per spark when the Pyromancer makes a magic attack, it gains 1 orange die.',
     },
-    taunt: 1,
+    taunt: 6,
   },
 
   // ---- Characters Expansion ----
@@ -69,16 +70,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Cleric',
     blurb: 'Faithful support, calling on miracles to heal and to smite.',
     statTiers: {
-      str: [14, 20, 28, 36],
-      dex: [10, 15, 22, 30],
-      int: [9, 13, 18, 28],
-      fai: [17, 24, 32, 40],
+      str: [12, 18, 27, 37],
+      dex: [8, 15, 24, 33],
+      int: [7, 14, 22, 30],
+      fai: [16, 23, 32, 40],
     },
     heroicAction: {
-      name: 'Divine Blessing',
-      text: 'Every ally at range removes up to 2 red cubes from their endurance bar.',
+      name: 'Keep the Faith',
+      text: 'Once per spark during her activation, the Cleric may use Keep the Faith. When she does, each character within range 1 removes 2 red cubes from their endurance bar.',
     },
-    taunt: 2,
+    taunt: 3,
   },
   {
     id: 'sorcerer',
@@ -86,16 +87,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Sorcerer',
     blurb: 'Punishes foes from afar with potent soul magic.',
     statTiers: {
-      str: [9, 14, 20, 28],
-      dex: [13, 19, 27, 36],
-      int: [18, 24, 32, 40],
-      fai: [12, 16, 22, 30],
+      str: [7, 14, 22, 31],
+      dex: [12, 18, 27, 36],
+      int: [16, 23, 32, 40],
+      fai: [7, 15, 24, 33],
     },
     heroicAction: {
-      name: 'Homing Soulmass',
-      text: 'Deal 1 magic damage to each of up to 3 different enemies within range.',
+      name: 'Spell Fury',
+      text: 'Once per spark when the Sorcerer makes a magic attack, it gains 1 die and its Stamina cost is reduced by 3.',
     },
-    taunt: 1,
+    taunt: 5,
   },
   {
     id: 'mercenary',
@@ -103,16 +104,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Mercenary',
     blurb: 'A versatile sellsword whose twinblades chain into rapid strikes.',
     statTiers: {
-      str: [13, 19, 27, 36],
-      dex: [17, 24, 32, 40],
-      int: [11, 16, 22, 31],
-      fai: [11, 15, 21, 30],
+      str: [10, 17, 26, 35],
+      dex: [16, 22, 32, 40],
+      int: [10, 17, 26, 35],
+      fai: [8, 14, 21, 30],
     },
     heroicAction: {
-      name: 'Onslaught',
-      text: 'Make an extra weapon attack this turn without spending Stamina.',
+      name: 'Rapid Strike',
+      text: 'Once per spark during their activation, the Mercenary may make an attack that costs 0 Stamina even if they already used that Weapon during their activation.',
     },
-    taunt: 2,
+    taunt: 7,
   },
   {
     id: 'thief',
@@ -120,16 +121,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Thief',
     blurb: 'Agile and skillful, deadly at range with a bow and nimble in melee.',
     statTiers: {
-      str: [10, 15, 22, 30],
-      dex: [18, 24, 32, 40],
-      int: [12, 17, 24, 32],
-      fai: [11, 15, 21, 30],
+      str: [9, 16, 24, 33],
+      dex: [13, 21, 31, 40],
+      int: [10, 18, 27, 36],
+      fai: [8, 15, 23, 31],
     },
     heroicAction: {
-      name: 'Backstab',
-      text: 'Your next attack this turn rolls one additional die of its highest type.',
+      name: 'Lucky Break',
+      text: 'Once per spark during his activation, the Thief may use Lucky Break. When he does, he removes 2 black and 2 red cubes from his endurance bar and flips his Luck token to the ready side.',
     },
-    taunt: 1,
+    taunt: 2,
   },
   {
     id: 'deprived',
@@ -137,14 +138,14 @@ export const CLASSES: ClassBoard[] = [
     name: 'Deprived',
     blurb: 'Begins with nothing but wits and bravery — the only class that reaches Tier 3 evenly across all four stats.',
     statTiers: {
-      str: [11, 18, 26, 35],
-      dex: [11, 18, 26, 35],
-      int: [11, 18, 26, 35],
-      fai: [11, 18, 26, 35],
+      str: [10, 20, 30, 40],
+      dex: [10, 20, 30, 40],
+      int: [10, 20, 30, 40],
+      fai: [10, 20, 30, 40],
     },
     heroicAction: {
-      name: 'Desperation',
-      text: 'Gain 2 Stamina (remove 2 black cubes), then make a weapon attack.',
+      name: 'Combat Versatility',
+      text: 'Once per spark at the start of his activation, the Deprived may change equipment as if he had visited Blacksmith Andre.',
     },
     taunt: 1,
   },
@@ -156,16 +157,16 @@ export const CLASSES: ClassBoard[] = [
     name: 'Knight',
     blurb: 'A well-rounded defender, sturdy in plate and capable with most arms.',
     statTiers: {
-      str: [16, 22, 30, 40],
-      dex: [14, 20, 28, 35],
-      int: [10, 15, 22, 30],
-      fai: [12, 16, 22, 30],
+      str: [13, 21, 30, 40],
+      dex: [12, 19, 29, 38],
+      int: [9, 15, 23, 31],
+      fai: [9, 15, 23, 31],
     },
     heroicAction: {
-      name: 'Stalwart',
-      text: 'Until your next turn, reduce all damage you suffer by 1.',
+      name: 'Stand Fast',
+      text: 'Once per spark after making a block roll, the Knight may roll an additional blue die and add it to the roll.',
     },
-    taunt: 3,
+    taunt: 10,
   },
   {
     id: 'assassin',
@@ -173,15 +174,15 @@ export const CLASSES: ClassBoard[] = [
     name: 'Assassin',
     blurb: 'A nimble skirmisher mixing blades and sorcery to strike and slip away.',
     statTiers: {
-      str: [12, 18, 25, 34],
-      dex: [16, 24, 32, 40],
-      int: [14, 20, 28, 36],
-      fai: [10, 14, 20, 30],
+      str: [10, 16, 25, 34],
+      dex: [14, 22, 31, 40],
+      int: [11, 18, 27, 36],
+      fai: [9, 14, 22, 30],
     },
     heroicAction: {
-      name: 'Shadow Strike',
-      text: 'Move up to 2 nodes, then make a weapon attack that ignores the target’s block.',
+      name: 'Backstab',
+      text: 'Once per spark after making a successful dodge, the Assassin may attack the enemy he dodged. The attack does not cost Stamina but must have range to the enemy.',
     },
-    taunt: 1,
+    taunt: 8,
   },
 ]

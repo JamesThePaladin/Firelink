@@ -5,15 +5,14 @@ with verified values from the physical components. Nothing below is confirmed ye
 Everything lives in plain data files and hot-reloads — no in-app editing.
 
 ## 1. Class boards — `src/data/classes.ts`
-Per class (10 total: Knight, Warrior, Assassin, Herald, Pyromancer, Cleric, Sorcerer,
-Mercenary, Thief, Deprived):
+All 10 classes transcribed from the physical boards (Tabletop Sim captures, 2026-06-20):
 
-- [ ] **Stat tiers** (`statTiers`) — currently APPROXIMATE (close, not exact). Replace
-      each class's `str/dex/int/fai` arrays `[Base, T1, T2, T3]` with board values.
-- [ ] **Heroic Action** (`heroicAction.name` + `.text`) — placeholder text. Replace.
-- [ ] **Taunt** (`taunt`) — placeholder number. Replace.
-
-(Class ids and which box each appears in are settled — no change needed there.)
+- [x] **Stat tiers** (`statTiers`) — real Base/T1/T2/T3 values from each board.
+- [x] **Heroic Action** (`heroicAction.name` + `.text`) — transcribed.
+- [x] **Taunt** (`taunt`) — from each board's taunt token.
+- [ ] **Die colour on die-granting heroics** — Warrior (black) and Pyromancer (orange)
+      read from the art; **Sorcerer's Spell Fury die colour is unconfirmed** (written
+      generically as "1 die").
 
 ## 2. Equipment — `src/data/equipment.ts` (auto-generated, 375 items)
 Now imported from the user's richer copy of the Mathog sheet
