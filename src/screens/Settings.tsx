@@ -2,7 +2,7 @@ import TopBar from '../components/TopBar'
 
 const REPO_URL = 'https://github.com/JamesThePaladin/Firelink'
 const SHEET_URL =
-  'https://docs.google.com/spreadsheets/d/1iAU_eg7VPNARnp8UdJQwEY2m4hekw1Af6Q4JBfLJOp8/edit'
+  'https://docs.google.com/spreadsheets/d/1q76mS5wAMcfct8izvUsggbTJbezmfTuf_uPG5CPLsSc/edit'
 
 export default function Settings() {
   return (
