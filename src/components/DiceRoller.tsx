@@ -1,10 +1,35 @@
 import { useMemo, useState } from 'react'
-import type { Character, ClassBoard, DiceColor, DicePool } from '../types'
+import type {
+  Character,
+  ClassBoard,
+  DiceColor,
+  DicePool,
+  EquippedItem,
+} from '../types'
 import { ATTACK_DICE } from '../types'
 import { getCard } from '../data'
 import { DIE_LABEL, DIE_STYLE } from '../data/dice'
 import { rollPool, poolSize, poolLabel, type RollResult } from '../lib/roll'
 import Modal from './Modal'
+
+// Game rule learned from play (not on the source sheet): Havel's Greatshield
+// prevents dodging — you get 0 dodge dice while it's equipped.
+const NO_DODGE_IDS = new Set(['havel-s-greatshield'])
+
+const DEF_DICE: DiceColor[] = [...ATTACK_DICE, 'green']
+
+function mergePool(into: DicePool, add: DicePool) {
+  for (const c of DEF_DICE) {
+    const n = add[c] ?? 0
+    if (n) into[c] = (into[c] ?? 0) + n
+  }
+}
+
+function withGreen(pool: DicePool, green: number): DicePool {
+  const out = { ...pool }
+  if (green > 0) out.green = (out.green ?? 0) + green
+  return out
+}
 
 interface Props {
   character: Character
@@ -62,25 +87,49 @@ export default function DiceRoller({ character, onClose }: Props) {
     return out
   }, [character.equipped])
 
-  // Defensive rolls (block / resist / dodge) from every equipped piece, incl. armour.
-  const defencePresets = useMemo(() => {
-    const out: { label: string; pool: DicePool; modifier: number }[] = []
-    const add = (item: { cardId: string } | null) => {
-      const d = item && getCard(item.cardId)?.defence
-      const name = item && getCard(item.cardId)?.name
-      if (!d || !name) return
-      if (d.block && poolSize(d.block.dice) > 0)
-        out.push({ label: `${name} · Block`, pool: d.block.dice, modifier: d.block.modifier ?? 0 })
-      if (d.resist && poolSize(d.resist.dice) > 0)
-        out.push({ label: `${name} · Resist`, pool: d.resist.dice, modifier: d.resist.modifier ?? 0 })
-      if (d.dodge)
-        out.push({ label: `${name} · Dodge`, pool: { green: d.dodge }, modifier: 0 })
+  // Your defence roll is the AGGREGATE of all worn/held gear: armour + both hands
+  // (plus their attached upgrades). For a physical attack you roll all block dice +
+  // dodge dice together; for magic, all resist dice + dodge dice. Backup gear is
+  // sheathed and doesn't contribute. Havel's Greatshield disables dodging entirely.
+  const defence = useMemo(() => {
+    const block: DicePool = {}
+    const resist: DicePool = {}
+    let blockMod = 0
+    let resistMod = 0
+    let dodge = 0
+    let noDodge = false
+    const consume = (item: EquippedItem | null) => {
+      if (!item) return
+      for (const id of [item.cardId, ...item.upgrades]) {
+        if (NO_DODGE_IDS.has(id)) noDodge = true
+        const d = getCard(id)?.defence
+        if (!d) continue
+        if (d.block) {
+          mergePool(block, d.block.dice)
+          blockMod += d.block.modifier ?? 0
+        }
+        if (d.resist) {
+          mergePool(resist, d.resist.dice)
+          resistMod += d.resist.modifier ?? 0
+        }
+        dodge += d.dodge ?? 0
+      }
     }
-    add(character.equipped.armour)
-    add(character.equipped.leftHand)
-    add(character.equipped.rightHand)
-    for (const b of character.equipped.backup) add(b)
-    return out
+    consume(character.equipped.armour)
+    consume(character.equipped.leftHand)
+    consume(character.equipped.rightHand)
+    if (noDodge) dodge = 0
+
+    const presets: { label: string; pool: DicePool; modifier: number }[] = []
+    const hasBlock = poolSize(block) > 0
+    const hasResist = poolSize(resist) > 0
+    if (hasBlock)
+      presets.push({ label: 'Block — physical', pool: withGreen(block, dodge), modifier: blockMod })
+    if (hasResist)
+      presets.push({ label: 'Resist — magic', pool: withGreen(resist, dodge), modifier: resistMod })
+    if (!hasBlock && !hasResist && dodge > 0)
+      presets.push({ label: 'Dodge', pool: { green: dodge }, modifier: 0 })
+    return { presets, noDodge, dodge }
   }, [character.equipped])
 
   // Which hands actually have rollable actions, and the active tab.
@@ -157,11 +206,13 @@ export default function DiceRoller({ character, onClose }: Props) {
         </div>
       )}
 
-      {defencePresets.length > 0 && (
+      {defence.presets.length > 0 && (
         <div className="mb-4">
-          <p className="mb-1 text-xs text-ash-500">Defence — block / resist / dodge</p>
+          <p className="mb-1 text-xs text-ash-500">
+            Defence — your total from all worn gear
+          </p>
           <div className="flex flex-col gap-1">
-            {defencePresets.map((p, i) => (
+            {defence.presets.map((p, i) => (
               <button
                 key={i}
                 onClick={() => applyPreset(p)}
@@ -175,6 +226,11 @@ export default function DiceRoller({ character, onClose }: Props) {
               </button>
             ))}
           </div>
+          {defence.noDodge && (
+            <p className="mt-1 text-[11px] text-blood-500">
+              Havel's Greatshield equipped — dodge disabled.
+            </p>
+          )}
         </div>
       )}
 
