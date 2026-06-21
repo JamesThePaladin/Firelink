@@ -1,4 +1,4 @@
-import type { EquipmentCard, StatKey } from '../types'
+import type { EquipmentCard, ItemKind, StatKey } from '../types'
 import { STAT_KEYS, STAT_ABBR } from '../types'
 import { poolLabel } from '../lib/roll'
 
@@ -8,12 +8,20 @@ interface Props {
   compact?: boolean
 }
 
-const SLOT_LABEL: Record<EquipmentCard['slot'], string> = {
+const KIND_LABEL: Record<ItemKind, string> = {
+  weapon: 'Weapon',
+  shield: 'Shield',
+  spell: 'Spell',
   armour: 'Armour',
-  'one-hand': 'One-handed',
-  'two-hand': 'Two-handed',
-  'weapon-upgrade': 'Weapon upgrade',
-  'armour-upgrade': 'Armour upgrade',
+  ring: 'Ring',
+  upgrade: 'Upgrade',
+  ember: 'Ember',
+}
+
+function kindLabel(card: EquipmentCard): string {
+  const base = KIND_LABEL[card.kind]
+  if (card.hands) return `${card.hands === 2 ? 'Two' : 'One'}-handed ${base}`
+  return base
 }
 
 export default function CardStats({ card, statValues, compact }: Props) {
@@ -25,18 +33,15 @@ export default function CardStats({ card, statValues, compact }: Props) {
         <div className="mb-1 flex items-center justify-between">
           <span className="font-serif text-soul-400">{card.name}</span>
           <span className="text-[10px] uppercase tracking-wide text-ash-500">
-            {SLOT_LABEL[card.slot]}
+            {kindLabel(card)}
           </span>
         </div>
       )}
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ash-400">
-        {card.range != null && <span>Range {card.range}</span>}
-        {card.block != null && card.block > 0 && <span>Block {card.block}</span>}
-        {card.resist != null && card.resist > 0 && (
-          <span>Resist {card.resist}</span>
+        {card.source && card.source !== 'base' && (
+          <span className="text-ember-400">{card.source}</span>
         )}
-        {card.dodge != null && card.dodge > 0 && <span>Dodge {card.dodge}</span>}
         {card.upgradeSlots != null && card.upgradeSlots > 0 && (
           <span>Upgrades {card.upgradeSlots}</span>
         )}
@@ -62,26 +67,38 @@ export default function CardStats({ card, statValues, compact }: Props) {
         </div>
       )}
 
-      {card.actions?.map((a, i) => (
-        <div
-          key={i}
-          className="mt-1 rounded border border-ash-700 bg-ash-850 px-2 py-1 text-xs"
-        >
-          <span className="text-ember-400">{a.name ?? `${a.stamina} ST`}</span>
-          {a.name && <span className="text-ash-500"> · {a.stamina} ST</span>}
-          <span className="text-ash-500"> · </span>
-          <span className="text-ash-300">{poolLabel(a.dice)}</span>
-          {a.modifier ? (
-            <span className="text-ash-300">
-              {' '}
-              {a.modifier > 0 ? `+${a.modifier}` : a.modifier}
-            </span>
-          ) : null}
-          {a.range != null && <span className="text-ash-500"> · rng {a.range}</span>}
-          {a.magic && <span className="text-blue-400"> · magic</span>}
-          {a.dodge != null && <span className="text-ash-500"> · dodge {a.dodge}</span>}
-        </div>
-      ))}
+      {card.actions?.map((a, i) => {
+        const dice = poolLabel(a.dice)
+        const label = a.name ?? (a.stamina != null ? `${a.stamina} ST` : 'Passive')
+        return (
+          <div
+            key={i}
+            className="mt-1 rounded border border-ash-700 bg-ash-850 px-2 py-1 text-xs"
+          >
+            <span className="text-ember-400">{label}</span>
+            {a.name && a.stamina != null && (
+              <span className="text-ash-500"> · {a.stamina} ST</span>
+            )}
+            {dice && (
+              <>
+                <span className="text-ash-500"> · </span>
+                <span className="text-ash-300">{dice}</span>
+              </>
+            )}
+            {a.modifier ? (
+              <span className="text-ash-300">
+                {' '}
+                {a.modifier > 0 ? `+${a.modifier}` : a.modifier}
+              </span>
+            ) : null}
+            {a.range != null && <span className="text-ash-500"> · rng {a.range}</span>}
+            {a.magic && <span className="text-blue-400"> · magic</span>}
+            {a.effects && a.effects.length > 0 && (
+              <span className="text-soul-500"> · {a.effects.join(', ')}</span>
+            )}
+          </div>
+        )
+      })}
 
       {card.text && !compact && (
         <p className="mt-1 text-xs text-ash-400">{card.text}</p>

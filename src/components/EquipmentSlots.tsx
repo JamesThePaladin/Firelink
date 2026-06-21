@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
 import type { Character, ClassBoard, EquippedItem, SetId } from '../types'
 import { getCard, equipmentForSets } from '../data'
-import { currentStatValues, meetsRequirement, isUpgrade } from '../lib/character'
+import {
+  currentStatValues,
+  meetsRequirement,
+  isUpgrade,
+  isTwoHanded,
+} from '../lib/character'
 import Modal from './Modal'
 import CardStats from './CardStats'
 import {
@@ -56,7 +61,7 @@ export default function EquipmentSlots({
       } else if (target === 'backup') {
         d.equipped.backup.push(item)
       } else {
-        if (card.slot === 'two-hand') {
+        if (isTwoHanded(card)) {
           const other = target === 'leftHand' ? 'rightHand' : 'leftHand'
           d.equipped[other] = null
         }
@@ -103,11 +108,8 @@ export default function EquipmentSlots({
   }, [picker, pool, query, character.classId])
 
   const detailCard = detail ? getCard(itemAt(detail)?.cardId ?? '') : undefined
-  const upgradeKind =
-    detailCard?.slot === 'armour' ? 'armour-upgrade' : 'weapon-upgrade'
-  const upgradeCandidates = upgradeFor
-    ? pool.filter((c) => c.slot === upgradeKind)
-    : []
+  // Rings + gems/titanite (upgrade-kind cards) attach into a gear item's slots.
+  const upgradeCandidates = upgradeFor ? pool.filter(isUpgrade) : []
 
   return (
     <section className="rounded-lg border border-ash-700 bg-ash-850 p-3">
@@ -196,8 +198,8 @@ export default function EquipmentSlots({
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-serif text-soul-400">{c.name}</span>
-                    {c.legendary && (
-                      <span className="text-[10px] text-ember-400">legendary</span>
+                    {c.source && c.source !== 'base' && (
+                      <span className="text-[10px] text-ember-400">{c.source}</span>
                     )}
                   </div>
                   <CardStats card={c} statValues={statValues} compact />

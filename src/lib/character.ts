@@ -6,7 +6,7 @@ import type {
   StatRequirement,
   Tier,
 } from '../types'
-import { STAT_KEYS, TIER_UP_COST } from '../types'
+import { STAT_KEYS, TIER_UP_COST, HAND_KINDS, UPGRADE_KINDS } from '../types'
 import { statValueAt } from '../data'
 
 /** Current numeric value of every stat, derived from the class board + tiers. */
@@ -46,10 +46,17 @@ export function unmetStats(
   return STAT_KEYS.filter((k) => (req[k] ?? 0) > values[k])
 }
 
-export const isWeapon = (card: EquipmentCard): boolean =>
-  card.slot === 'one-hand' || card.slot === 'two-hand'
+/** Hand-held gear: occupies a hand slot (and backup). */
+export const isHandHeld = (card: EquipmentCard): boolean =>
+  HAND_KINDS.includes(card.kind)
 
-export const isArmour = (card: EquipmentCard): boolean => card.slot === 'armour'
+export const isWeapon = (card: EquipmentCard): boolean => card.kind === 'weapon'
 
+export const isArmour = (card: EquipmentCard): boolean => card.kind === 'armour'
+
+/** Cards that attach into a gear item's upgrade slots (rings + gems/titanite). */
 export const isUpgrade = (card: EquipmentCard): boolean =>
-  card.slot === 'weapon-upgrade' || card.slot === 'armour-upgrade'
+  UPGRADE_KINDS.includes(card.kind)
+
+/** Takes both hands. */
+export const isTwoHanded = (card: EquipmentCard): boolean => card.hands === 2

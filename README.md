@@ -14,7 +14,8 @@ classes/items freely across them.
 - Stat tier track (STR/DEX/INT/FAI, Base→T3) with soul-cost level-ups (2/4/8, refundable).
 - 10-box endurance bar (stamina + damage), Estus clear, death state.
 - The four tokens (Estus, Luck, Heroic, Ember) + Heroic Action text + Rest at Bonfire.
-- Equipment with stat-gated equipping, 1H/2H/backup slot rules, upgrades, and inventory.
+- Equipment (375 cards, all sets) with stat-gated equipping, 1H/2H/backup slot rules,
+  and upgrade slots for rings/gems.
 - Dice roller: auto-loads an equipped weapon action's dice pool + modifier, manual pool,
   green dodge dice, result breakdown and roll history.
 
@@ -48,21 +49,25 @@ self-hosting, with the private-repo caveat for Pages.
 
 ## Data sources & accuracy
 
-The **equipment catalog (~310 items, all sets)** in `src/data/equipment.ts` is
+The **equipment catalog (375 items, all sets)** in `src/data/equipment.ts` is
 **auto-generated** from the community "Mathog" scoring spreadsheet
-(`/tmp` CSV → `scripts`-style Python parser). From the sheet we reliably get:
-name, set/box membership, class restriction, type, dice **actions** (stamina, dice,
-range, magic), armour **defence dice**, and effect text.
+(`scripts/source/equipment-sheet.xlsx` → stdlib Python parser in `scripts/`). From the
+sheet we reliably get: name, set/box membership, class restriction, kind
+(weapon/shield/spell/armour/ring/upgrade/ember), **handedness** (1H/2H), **stat
+requirements**, source/rarity, and up to 3 dice **actions** (stamina, attack dice,
+modifier, range, magic, effect tags).
 
-What the sheet does **not** contain — add/verify from your physical cards & boards:
+Still to verify/build from your physical cards & boards (see `DATA_TODO.md`):
 
-- **Stat requirements** (`req`) and flat block/resist — not in the sheet; add per card.
-- **Handedness** (1H/2H) and some secondary weapon actions — sheet is imperfect here.
+- **Upgrade-attach mechanic** — rings + gems/titanite attach into a gear item's 2 upgrade
+  slots. Data + a basic attach UI exist; the rules need fleshing out (deliberate TODO).
+- **Ember cards** (7) — imported but not yet slotted.
 - **Class boards** in `src/data/classes.ts` — stat tiers are **approximate** (not exact);
   Heroic Action text and taunt are placeholders. Verify all from your boards. Slots start
   **empty**; equip from the catalog.
-- **Dice faces** in `src/data/dice.ts` — black/blue/orange confirmed from the sheet;
-  the **green dodge die** still needs your physical die.
+- **Dice faces** in `src/data/dice.ts` — black/blue/orange confirmed (match the sheet's
+  averages); the **green dodge die** is defensive (not on any card) and still needs your
+  physical die.
 
 Edit any value in those plain data files; they hot-reload. Enable the sets you own in
 **Settings** — the catalog filters to them. **See [`DATA_TODO.md`](DATA_TODO.md) for the

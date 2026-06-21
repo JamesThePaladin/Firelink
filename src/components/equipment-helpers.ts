@@ -1,9 +1,10 @@
 import type { Character, EquipmentCard } from '../types'
-import { isWeapon } from '../lib/character'
+import { isArmour, isHandHeld, isTwoHanded } from '../lib/character'
 
 export type HandPath = 'leftHand' | 'rightHand'
 export type SlotTarget = 'armour' | HandPath | 'backup'
 
+/** Hand-held items carried (hands + backup) — capped by MAX_WEAPONS. */
 export function weaponCount(c: Character): number {
   return (
     (c.equipped.leftHand ? 1 : 0) +
@@ -12,7 +13,7 @@ export function weaponCount(c: Character): number {
   )
 }
 
-/** Is the off-hand blocked because a two-handed weapon occupies the other hand? */
+/** Is the off-hand blocked because a two-handed item occupies the other hand? */
 export function handBlockedBy(
   c: Character,
   hand: HandPath,
@@ -20,10 +21,11 @@ export function handBlockedBy(
 ): boolean {
   const other = hand === 'leftHand' ? c.equipped.rightHand : c.equipped.leftHand
   if (!other) return false
-  return getCard(other.cardId)?.slot === 'two-hand'
+  const card = getCard(other.cardId)
+  return card ? isTwoHanded(card) : false
 }
 
 export function slotAcceptsCard(target: SlotTarget, card: EquipmentCard): boolean {
-  if (target === 'armour') return card.slot === 'armour'
-  return isWeapon(card)
+  if (target === 'armour') return isArmour(card)
+  return isHandHeld(card)
 }

@@ -60,24 +60,61 @@ export type DicePool = Partial<Record<DiceColor, number>>
 
 // ---- Equipment -----------------------------------------------------------
 
-export type EquipSlot =
+/**
+ * What kind of card this is. Body-equippable: weapon/shield/spell (hand slots),
+ * armour (armour slot). Attach into a gear item's upgrade slots: ring + upgrade
+ * (gems/titanite). Ember is tracked but not yet slotted (TODO).
+ */
+export type ItemKind =
+  | 'weapon'
+  | 'shield'
+  | 'spell'
   | 'armour'
-  | 'one-hand'
-  | 'two-hand'
-  | 'weapon-upgrade'
-  | 'armour-upgrade'
+  | 'ring'
+  | 'upgrade'
+  | 'ember'
+
+/** Where a card is acquired from — drives rarity styling. */
+export type ItemSource =
+  | 'base'
+  | 'transposed'
+  | 'legendary'
+  | 'mini-boss'
+  | 'main-boss'
+  | 'mega-boss'
+  | 'invader'
+
+/** Secondary on-hit / action effects pulled from the source sheet. */
+export type EffectTag =
+  | 'node'
+  | 'bleed'
+  | 'poison'
+  | 'frost'
+  | 'stagger'
+  | 'push'
+  | 'move'
+  | 'buff'
+  | 'shaft'
+  | 'repeat'
+
+/** Cards that attach into another item's upgrade slots. */
+export const UPGRADE_KINDS: readonly ItemKind[] = ['ring', 'upgrade'] as const
+
+/** Cards that occupy a hand slot. */
+export const HAND_KINDS: readonly ItemKind[] = ['weapon', 'shield', 'spell'] as const
 
 export interface ItemAction {
   /** Optional label (sheet has none; UI falls back to stamina + dice). */
   name?: string
-  stamina: number
+  /** Stamina cost; omitted for free/passive actions. */
+  stamina?: number
   dice: DicePool
   modifier?: number
   range?: number
   /** Magic (resisted) rather than physical (blocked) damage. */
   magic?: boolean
-  /** For defensive actions: flat dodge value. */
-  dodge?: number
+  /** Secondary effects (bleed, stagger, push, …). */
+  effects?: EffectTag[]
   text?: string
 }
 
@@ -86,25 +123,20 @@ export interface EquipmentCard {
   name: string
   /** Boxes this card appears in. Shown when ANY is in the owned sets. */
   sets: SetId[]
-  slot: EquipSlot
-  /** Spell tool (catalyst/talisman/flame) — equips in a hand. */
-  spell?: boolean
+  kind: ItemKind
+  /** Hands occupied by hand-held gear (weapon/shield/spell). 2 = both hands. */
+  hands?: 1 | 2
   /** Class-locked treasure. Omitted = usable by any class. */
   classId?: string
-  range?: number
-  /** Stat requirements — OPTIONAL; supplied from physical cards over time. */
+  /** Stat requirements to equip. */
   req?: StatRequirement
-  /** Flat defensive values (when known). */
-  block?: number
-  resist?: number
-  dodge?: number
+  /** Upgrade slots on this gear (equippable gear has 2). */
   upgradeSlots?: number
+  source?: ItemSource
   /** Weapon attacks / spell casts / an armour "Defend" roll. */
   actions?: ItemAction[]
   /** Card effect text / special rules. */
   text?: string
-  legendary?: boolean
-  transposed?: boolean
   notes?: string
 }
 

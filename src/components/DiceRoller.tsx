@@ -41,7 +41,7 @@ export default function DiceRoller({ character, onClose }: Props) {
       for (const a of card.actions) {
         if (poolSize(a.dice) === 0) continue // skip non-dice actions (e.g. pure heals)
         out.push({
-          label: `${card.name}: ${a.name ?? `${a.stamina} ST`}`,
+          label: `${card.name}: ${a.name ?? (a.stamina != null ? `${a.stamina} ST` : 'Attack')}`,
           pool: a.dice,
           modifier: a.modifier ?? 0,
           text: a.text,

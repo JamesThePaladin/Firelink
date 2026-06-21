@@ -1,84 +1,228 @@
 #!/usr/bin/env python3
-import re, json, parse_equipment as P
+"""Regenerate src/data/equipment.ts from the Mathog "Equipment" sheet.
 
-BOX2SLUG = {
- 'Core':'core','Characters':'characters-expansion','Sunless City':'sunless-city',
- 'Painted World':'painted-world','Tomb of Giants':'tomb-of-giants','Iron Keep':'iron-keep',
- 'Darkroot':'darkroot','Explorers':'explorers','Phantoms':'phantoms','Asylum Demon':'asylum-demon',
- 'Chariot':'chariot','Four Kings':'four-kings','Gaping Dragon':'gaping-dragon',
- 'Guardian Dragon':'guardian-dragon','Kalameet':'kalameet','Last Giant':'last-giant',
- 'Manus':'manus','Old Iron King':'old-iron-king','Vordt':'vordt',
+Source of truth: scripts/source/equipment-sheet.xlsx (the user's shared copy of
+the community scoring spreadsheet, id 1iAU_eg7...). Run:
+
+    PYTHONPATH=scripts python3 scripts/generate_equipment.py
+
+The Equipment tab is a wide scoring sheet. Item rows are 22..396. We read:
+  A  Name
+  I/L/O  Expansion membership (a card can appear in up to 3 boxes)
+  Z / AC  Class restriction
+  AE Type -> our `kind` (Weapon/Shield/Spell/Armor/Ring/Ember/Upgrade)
+  AF '2H' flag -> handedness for hand-held gear
+  AI/AJ/AK/AL  Str/Dex/Int/Fth requirements
+  J  Source/rarity (Transposed / *Boss / Legendary / Invader; blank = base)
+  Three Action blocks (GB.., GU.., HN..) each: Range, Cost, 4 Die, Mod, Mag,
+    then effect flags (node/bleed/poison/frost/stagger/push/move/buff/shaft/repeat).
+
+Dice are stored as 3-letter codes in the cells (BLK/BLU/ORA); only attack dice
+appear here (no green/dodge die — that's defensive, off-card).
+"""
+import os, re, sys
+from xlsxread import Wb, colnum
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+XLSX = os.path.join(HERE, 'source', 'equipment-sheet.xlsx')
+OUT = os.path.join(HERE, '..', 'src', 'data', 'equipment.ts')
+SHEET = 'xl/worksheets/sheet3.xml'  # "Equipment"
+ROW_LO, ROW_HI = 22, 396
+
+EXP2SET = {
+    'Core': 'core', 'Sunless City': 'sunless-city', 'Characters': 'characters-expansion',
+    'Painted World': 'painted-world', 'Tomb of Giants': 'tomb-of-giants', 'Iron Keep': 'iron-keep',
+    'Darkroot': 'darkroot', 'Explorers': 'explorers', 'Phantoms': 'phantoms', 'Asylum Demon': 'asylum-demon',
+    'Chariot': 'chariot', 'Four Kings': 'four-kings', 'Gaping Dragon': 'gaping-dragon',
+    'Guardian Dragon': 'guardian-dragon', 'Kalameet': 'kalameet', 'Last Giant': 'last-giant',
+    'Manus': 'manus', 'Old Iron King': 'old-iron-king', 'Vordt': 'vordt',
 }
+DIE = {'BLK': 'black', 'BLU': 'blue', 'ORA': 'orange', 'GRN': 'green'}
+KIND = {'Weapon': 'weapon', 'Shield': 'shield', 'Spell': 'spell', 'Armor': 'armour',
+        'Ring': 'ring', 'Ember': 'ember', 'Upgrade': 'upgrade'}
+SOURCE = {'Transposed': 'transposed', 'Legendary': 'legendary', 'Mini Boss': 'mini-boss',
+          'Main Boss': 'main-boss', 'Mega Boss': 'mega-boss', 'Invader': 'invader'}
+EFFECTS = ['node', 'bleed', 'poison', 'frost', 'stagger', 'push', 'move', 'buff', 'shaft', 'repeat']
+ACT_BASE = {'1': 'GB', '2': 'GU', '3': 'HN'}
+HAND_KINDS = {'weapon', 'shield', 'spell'}
+GEAR_KINDS = {'weapon', 'shield', 'spell', 'armour'}  # has 2 upgrade slots
 
-def slug(s):
-    return re.sub(r'-+','-', re.sub(r'[^a-z0-9]+','-', s.lower())).strip('-')
+
+def num(s):
+    if s is None:
+        return None
+    try:
+        f = float(s)
+        return int(f) if f == int(f) else f
+    except ValueError:
+        return None
+
+
+def slug(name):
+    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip('-')
+    return s or 'item'
+
 
 def main():
-    items = P.parse('scripts/source/equipment.csv','equipment')
-    cards=[]
-    seen={}
-    for it in items:
-        name=it['name']
-        sid=slug(name)
-        seen[sid]=seen.get(sid,0)+1
-        if seen[sid]>1: sid=f"{sid}-{seen[sid]}"
-        sets=sorted({BOX2SLUG[b] for b in it['sets'] if b in BOX2SLUG})
-        typ=it['type']
-        spell = typ=='Spell'
-        if typ=='Armor':
-            slot='armour'
-        elif typ in ('Weapon','Spell','Shield'):
-            slot='two-hand' if (typ=='Weapon' and it.get('twoHanded')) else 'one-hand'
-        else:
+    wb = Wb(XLSX)
+    sh = wb.sheet(SHEET)
+    C = colnum
+
+    def cell(rn, L):
+        return sh.get(rn, C(L))[0]
+
+    def action(rn, base):
+        b = C(base)
+        rng = num(sh.get(rn, b + 0)[0])
+        cost = num(sh.get(rn, b + 1)[0])
+        dice = {}
+        for k in range(4):
+            dv = sh.get(rn, b + 2 + k)[0]
+            if dv in DIE:
+                d = DIE[dv]
+                dice[d] = dice.get(d, 0) + 1
+        mod = num(sh.get(rn, b + 6)[0])
+        mag = sh.get(rn, b + 7)[0]
+        eff = []
+        for off, name in enumerate(EFFECTS):
+            ev = sh.get(rn, b + 8 + off)[0]
+            if ev not in (None, '', '0', '0.0'):
+                eff.append(name)
+        if not dice and cost is None and not eff:
+            return None
+        a = {}
+        if cost is not None:
+            a['stamina'] = cost
+        a['dice'] = dice
+        if mod not in (None, 0):
+            a['modifier'] = mod
+        if rng is not None:
+            a['range'] = rng
+        if mag not in (None, '', '0', '0.0'):
+            a['magic'] = True
+        if eff:
+            a['effects'] = eff
+        return a
+
+    items = []
+    seen = {}
+    for rn in range(ROW_LO, ROW_HI + 1):
+        name = cell(rn, 'A')
+        if not name:
             continue
-        card={'id':sid,'name':name,'sets':sets,'slot':slot}
-        if spell: card['spell']=True
-        if it.get('classId'): card['classId']=it['classId']
-        actions=[]
-        for a in it.get('actions',[]):
-            act={'stamina':a.get('stamina',0),'dice':a.get('dice',{})}
-            if a.get('modifier'): act['modifier']=a['modifier']
-            if a.get('range') is not None: act['range']=a['range']
-            if a.get('magic'): act['magic']=True
-            actions.append(act)
-        d=it.get('defence')
-        if d:
-            defact={'name':'Defend','stamina':0,'dice':d.get('dice',{})}
-            if d.get('modifier'): defact['modifier']=d['modifier']
-            if d.get('magic'): defact['magic']=True
-            actions.insert(0, defact)
-            if d.get('dodge') is not None: card['dodge']=d['dodge']
-        if actions: card['actions']=actions
-        if it.get('text'): card['text']=it['text']
-        for t in it.get('tags',[]):
-            if t=='Legendary': card['legendary']=True
-            if t=='Transposed': card['transposed']=True
-        cards.append(card)
+        kind = KIND.get(cell(rn, 'AE'))
+        if not kind:
+            continue
+        sets = []
+        for L in ('I', 'L', 'O'):
+            e = cell(rn, L)
+            sid = EXP2SET.get(e) if e else None
+            if sid and sid not in sets:
+                sets.append(sid)
+        req = {}
+        for L, key in (('AI', 'str'), ('AJ', 'dex'), ('AK', 'int'), ('AL', 'fai')):
+            v = num(cell(rn, L))
+            if v:
+                req[key] = v
+        cls = cell(rn, 'Z') or cell(rn, 'AC')
+        src = SOURCE.get(cell(rn, 'J'))
+        acts = [a for a in (action(rn, ACT_BASE[i]) for i in ('1', '2', '3')) if a]
 
-    # emit TS
-    def ts(v):
-        if isinstance(v,bool): return 'true' if v else 'false'
-        if isinstance(v,(int,float)): return repr(v)
-        if isinstance(v,str):
-            return "'"+v.replace('\\','\\\\').replace("'","\\'")+"'"
-        if isinstance(v,list):
-            return '['+', '.join(ts(x) for x in v)+']'
-        if isinstance(v,dict):
-            return '{ '+', '.join(f"{k}: {ts(val)}" for k,val in v.items())+' }'
-        return 'undefined'
+        base_id = slug(name)
+        seen[base_id] = seen.get(base_id, 0) + 1
+        item_id = base_id if seen[base_id] == 1 else f"{base_id}-{seen[base_id]}"
 
-    lines=["// AUTO-GENERATED from the Mathog 'Equipment' sheet (community scoring tool).",
-           "// From sheet (good): name, sets, class, type, dice/actions, magic, defence dice, text.",
-           "// TODO(verify) - add/fix from physical cards: stat requirements (req), flat",
-           "//   block/resist, upgrade slots, HANDEDNESS (1H/2H), and some secondary/basic",
-           "//   weapon actions. See DATA_TODO.md.",
-           "import type { EquipmentCard } from '../types'","",
-           "export const EQUIPMENT: EquipmentCard[] = ["]
-    for c in cards:
-        lines.append('  '+ts(c)+',')
+        item = {'id': item_id, 'name': name, 'sets': sets, 'kind': kind}
+        if kind in HAND_KINDS:
+            item['hands'] = 2 if str(cell(rn, 'AF')) == '1' else 1
+        if cls:
+            item['classId'] = cls.lower()
+        if req:
+            item['req'] = req
+        if kind in GEAR_KINDS:
+            item['upgradeSlots'] = 2
+        if src:
+            item['source'] = src
+        if acts:
+            item['actions'] = acts
+        items.append(item)
+
+    items.sort(key=lambda i: (i['kind'], i['name'].lower(), i['id']))
+    write_ts(items)
+    kinds = {}
+    for i in items:
+        kinds[i['kind']] = kinds.get(i['kind'], 0) + 1
+    print(f"wrote {len(items)} cards -> {os.path.relpath(OUT)}")
+    print('kinds:', kinds)
+
+
+def ts_str(s):
+    return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+
+def ts_dice(d):
+    order = ['black', 'blue', 'orange', 'green']
+    parts = [f"{k}: {d[k]}" for k in order if k in d]
+    return '{ ' + ', '.join(parts) + ' }' if parts else '{}'
+
+
+def ts_action(a):
+    p = []
+    if 'stamina' in a:
+        p.append(f"stamina: {a['stamina']}")
+    p.append(f"dice: {ts_dice(a['dice'])}")
+    if 'modifier' in a:
+        p.append(f"modifier: {a['modifier']}")
+    if 'range' in a:
+        p.append(f"range: {a['range']}")
+    if a.get('magic'):
+        p.append('magic: true')
+    if 'effects' in a:
+        p.append('effects: [' + ', '.join(ts_str(e) for e in a['effects']) + ']')
+    return '{ ' + ', '.join(p) + ' }'
+
+
+def ts_card(c):
+    p = [f"id: {ts_str(c['id'])}", f"name: {ts_str(c['name'])}"]
+    p.append('sets: [' + ', '.join(ts_str(s) for s in c['sets']) + ']')
+    p.append(f"kind: {ts_str(c['kind'])}")
+    if 'hands' in c:
+        p.append(f"hands: {c['hands']}")
+    if 'classId' in c:
+        p.append(f"classId: {ts_str(c['classId'])}")
+    if 'req' in c:
+        rp = ', '.join(f"{k}: {v}" for k, v in c['req'].items())
+        p.append('req: { ' + rp + ' }')
+    if 'upgradeSlots' in c:
+        p.append(f"upgradeSlots: {c['upgradeSlots']}")
+    if 'source' in c:
+        p.append(f"source: {ts_str(c['source'])}")
+    if 'actions' in c:
+        p.append('actions: [' + ', '.join(ts_action(a) for a in c['actions']) + ']')
+    return '  { ' + ', '.join(p) + ' },'
+
+
+def write_ts(items):
+    lines = [
+        "// AUTO-GENERATED by scripts/generate_equipment.py — do not edit by hand.",
+        "// Source: scripts/source/equipment-sheet.xlsx (community 'Mathog' scoring sheet).",
+        "//",
+        "// Reliable from the sheet: name, set membership, class restriction, kind,",
+        "// handedness (2H flag), stat requirements (Str/Dex/Int/Fth), source/rarity,",
+        "// and up to 3 actions (stamina, attack dice BLK/BLU/ORA, modifier, range,",
+        "// magic flag, effect tags). The green/dodge die is defensive and NOT on cards.",
+        "// Ring + Upgrade cards attach into a gear item's 2 upgrade slots (UI = TODO).",
+        "",
+        "import type { EquipmentCard } from '../types'",
+        "",
+        "export const EQUIPMENT: EquipmentCard[] = [",
+    ]
+    lines += [ts_card(c) for c in items]
     lines.append(']')
-    open('src/data/equipment.ts','w').write('\n'.join(lines)+'\n')
-    print(f"wrote {len(cards)} cards")
+    lines.append('')
+    with open(OUT, 'w') as f:
+        f.write('\n'.join(lines))
 
-if __name__=='__main__':
-    main()
+
+if __name__ == '__main__':
+    sys.exit(main())

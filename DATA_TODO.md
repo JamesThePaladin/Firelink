@@ -15,22 +15,36 @@ Mercenary, Thief, Deprived):
 
 (Class ids and which box each appears in are settled — no change needed there.)
 
-## 2. Equipment — `src/data/equipment.ts` (auto-generated, ~310 items)
-Reliable from the sheet: name, sets, class, type, dice actions, magic, defence dice, text.
-Still needed per item, from the cards:
+## 2. Equipment — `src/data/equipment.ts` (auto-generated, 375 items)
+Now imported from the user's richer copy of the Mathog sheet
+(`scripts/source/equipment-sheet.xlsx`, id `1iAU_eg7…`). **Reliably imported now:**
+name, set membership (up to 3 boxes), class restriction, kind
+(weapon/shield/spell/armour/ring/upgrade/ember), **handedness** (1H/2H), **stat
+requirements** (`req`), source/rarity, and up to 3 actions each (stamina, attack
+dice BLK/BLU/ORA, modifier, range, magic flag, effect tags).
 
-- [ ] **Stat requirements** (`req: { str, dex, int, fai }`) — none imported; add to gate equipping.
-- [ ] **Flat block / resist** values (`block`, `resist`) where armour uses them.
-- [ ] **Handedness** (`slot: 'one-hand'` vs `'two-hand'`) — sheet flag is unreliable; fix per weapon.
-- [ ] **Upgrade slots** (`upgradeSlots`) and any **upgrade/ring cards** (not in the sheet).
-- [ ] **Secondary/basic weapon actions** the sheet missed.
+Still to verify / build out:
 
-Note: editing then re-running the importer overwrites this file. Either keep manual edits
-after the final import, or move corrections into the generator (`scripts/`).
+- [x] **Stat requirements** (`req`) — imported (AI–AL on the sheet).
+- [x] **Handedness** (`hands: 1 | 2`) — imported from the `2H` flag.
+- [ ] **Upgrade-attach mechanic** — rings + gems/titanite (`kind: 'ring' | 'upgrade'`)
+      attach into a gear item's 2 upgrade slots. Data + a basic attach UI exist, but the
+      *rules* (which upgrades fit which gear, ring limits, effects) need fleshing out.
+      **User flagged this as a deliberate TODO for later.**
+- [ ] **Ember cards** (`kind: 'ember'`, 7 of them) — imported but not slotted; decide how
+      they're used.
+- [ ] **Spot-check stat-req scale** lines up with the final class stat tiers (both use the
+      same 0–40 scale; confirm once class boards are finalised).
+- [ ] **Flat block / resist** — not on this sheet; armour defence is expressed via actions.
+
+Note: editing then re-running the importer overwrites this file. Put any manual
+corrections into the generator (`scripts/generate_equipment.py`), not the output.
 
 ## 3. Dice — `src/data/dice.ts`
-- [x] Black / Blue / Orange faces — confirmed from the sheet's Dice tab.
-- [ ] **Green (dodge) die** faces — current `[0,0,1,1,1,2]` is a guess; confirm from the physical die.
+- [x] Black / Blue / Orange faces — confirmed (this sheet's Dice tab gives matching
+      min/max/avg: BLK 0–2 avg 1.167, BLU 1–3 avg 1.833, ORA 1–4 avg 2.5).
+- [ ] **Green (dodge) die** faces — current `[0,0,1,1,1,2]` is a guess; the die is
+      defensive and **not on any card**, so it must come from the physical die.
 
 ## How to hand me values
 Type them or send photos of the boards/cards/dice and I'll bake them into the files above.
