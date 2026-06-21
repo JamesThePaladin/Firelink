@@ -25,6 +25,35 @@ function mergePool(into: DicePool, add: DicePool) {
   }
 }
 
+function withGreen(pool: DicePool, green: number): DicePool {
+  const out = { ...pool }
+  if (green > 0) out.green = (out.green ?? 0) + green
+  return out
+}
+
+/**
+ * Split a roll into its block-style total (non-green dice + modifier) and its
+ * dodge successes (green dice). A roll mixing both is a Sunless City defence roll
+ * where you pick the better of the two; green-only is a pure dodge.
+ */
+function summarize(r: RollResult): {
+  mode: 'choose' | 'dodge' | 'plain'
+  blockTotal: number
+  dodge: number
+} {
+  const green = r.dice.filter((d) => d.color === 'green')
+  const other = r.dice.filter((d) => d.color !== 'green')
+  const dodge = green.reduce((a, d) => a + d.value, 0)
+  const blockTotal = Math.max(0, other.reduce((a, d) => a + d.value, 0) + r.modifier)
+  const mode =
+    green.length > 0 && other.length > 0
+      ? 'choose'
+      : green.length > 0
+        ? 'dodge'
+        : 'plain'
+  return { mode, blockTotal, dodge }
+}
+
 
 interface Props {
   character: Character
@@ -55,7 +84,7 @@ export default function DiceRoller({ character, onClose }: Props) {
   const [pool, setPool] = useState<DicePool>({})
   const [modifier, setModifier] = useState(0)
   const [result, setResult] = useState<RollResult | null>(null)
-  const [history, setHistory] = useState<{ label: string; total: number }[]>([])
+  const [history, setHistory] = useState<{ label: string; result: string }[]>([])
   const [handTab, setHandTab] = useState<HandSource | null>(null)
 
   // Build presets from every equipped weapon's actions, tagged by hand.
@@ -83,11 +112,11 @@ export default function DiceRoller({ character, onClose }: Props) {
   }, [character.equipped])
 
   // Your defence is the AGGREGATE of all worn/held gear: armour + both hands (plus
-  // their attached upgrades). When attacked you make ONE choice — block (physical),
-  // resist (magic), or dodge — so these are three independent rolls, not combined.
-  // Dodge is wholly gear-derived (0 is valid; per the rules FAQ you can still take the
-  // dodge action, just with no dice). Backup gear is sheathed and doesn't contribute.
-  // Havel's Greatshield disables dodging entirely.
+  // their attached upgrades). In The Sunless City you roll your block (or resist) dice
+  // AND your dodge dice together and pick the better result, so dodge is folded into
+  // each defence roll; the result view shows the block total vs dodge separately.
+  // Dodge is wholly gear-derived (0 is valid). Backup gear is sheathed and doesn't
+  // contribute. Havel's Greatshield disables dodging entirely.
   const defence = useMemo(() => {
     const block: DicePool = {}
     const resist: DicePool = {}
@@ -118,11 +147,13 @@ export default function DiceRoller({ character, onClose }: Props) {
     if (noDodge) dodge = 0
 
     const presets: { label: string; pool: DicePool; modifier: number }[] = []
-    if (poolSize(block) > 0)
-      presets.push({ label: 'Block — physical', pool: block, modifier: blockMod })
-    if (poolSize(resist) > 0)
-      presets.push({ label: 'Resist — magic', pool: resist, modifier: resistMod })
-    if (dodge > 0)
+    const hasBlock = poolSize(block) > 0
+    const hasResist = poolSize(resist) > 0
+    if (hasBlock)
+      presets.push({ label: 'Block — physical', pool: withGreen(block, dodge), modifier: blockMod })
+    if (hasResist)
+      presets.push({ label: 'Resist — magic', pool: withGreen(resist, dodge), modifier: resistMod })
+    if (!hasBlock && !hasResist && dodge > 0)
       presets.push({ label: 'Dodge', pool: { green: dodge }, modifier: 0 })
     return { presets, noDodge, dodge }
   }, [character.equipped])
@@ -153,11 +184,15 @@ export default function DiceRoller({ character, onClose }: Props) {
     if (poolSize(pool) === 0) return
     const r = rollPool(pool, modifier)
     setResult(r)
+    const s = summarize(r)
+    const result =
+      s.mode === 'choose'
+        ? `${s.blockTotal} blk / ${s.dodge} dodge`
+        : s.mode === 'dodge'
+          ? `${s.dodge} dodge`
+          : `${r.total}`
     setHistory((h) =>
-      [{ label: poolLabel(pool) + fmtMod(modifier), total: r.total }, ...h].slice(
-        0,
-        6,
-      ),
+      [{ label: poolLabel(pool) + fmtMod(modifier), result }, ...h].slice(0, 6),
     )
   }
 
@@ -308,12 +343,55 @@ export default function DiceRoller({ character, onClose }: Props) {
               </span>
             ))}
           </div>
-          <div className="mt-3 font-serif text-3xl text-ember-400">
-            {result.total}
-          </div>
-          <div className="text-xs text-ash-500">
-            {result.sum} dice {fmtMod(result.modifier)} = {result.total}
-          </div>
+          {(() => {
+            const s = summarize(result)
+            if (s.mode === 'choose')
+              return (
+                <>
+                  <div className="mt-3 flex items-center justify-center gap-5">
+                    <div>
+                      <div className="font-serif text-3xl text-ember-400">
+                        {s.blockTotal}
+                      </div>
+                      <div className="text-xs text-ash-500">
+                        Block{fmtMod(result.modifier)}
+                      </div>
+                    </div>
+                    <span className="text-sm text-ash-600">or</span>
+                    <div>
+                      <div className="font-serif text-3xl text-green-400">
+                        {s.dodge}
+                      </div>
+                      <div className="text-xs text-ash-500">Dodge</div>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-[11px] text-ash-600">
+                    Choose the better result
+                  </div>
+                </>
+              )
+            if (s.mode === 'dodge')
+              return (
+                <>
+                  <div className="mt-3 font-serif text-3xl text-green-400">
+                    {s.dodge}
+                  </div>
+                  <div className="text-xs text-ash-500">
+                    dodge {s.dodge === 1 ? 'success' : 'successes'}
+                  </div>
+                </>
+              )
+            return (
+              <>
+                <div className="mt-3 font-serif text-3xl text-ember-400">
+                  {result.total}
+                </div>
+                <div className="text-xs text-ash-500">
+                  {result.sum} dice {fmtMod(result.modifier)} = {result.total}
+                </div>
+              </>
+            )
+          })()}
         </div>
       )}
 
@@ -327,7 +405,7 @@ export default function DiceRoller({ character, onClose }: Props) {
                 className="flex items-center justify-between rounded border border-ash-800 bg-ash-900 px-2 py-1 text-xs"
               >
                 <span className="text-ash-400">{h.label}</span>
-                <span className="font-serif text-soul-400">{h.total}</span>
+                <span className="font-serif text-soul-400">{h.result}</span>
               </div>
             ))}
           </div>
