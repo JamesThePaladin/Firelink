@@ -36,8 +36,16 @@ export default function EquipmentSlots({
 }: Props) {
   const [picker, setPicker] = useState<Target | null>(null)
   const [upgradeFor, setUpgradeFor] = useState<Target | null>(null)
+  const [detail, setDetail] = useState<Target | null>(null)
   const [query, setQuery] = useState('')
   const [upgradeQuery, setUpgradeQuery] = useState('')
+
+  function itemForTarget(t: Target): EquippedItem | null {
+    if (t.target === 'armour') return character.equipped.armour
+    if (t.target === 'backup')
+      return character.equipped.backup[t.index ?? -1] ?? null
+    return character.equipped[t.target]
+  }
 
   const statValues = useMemo(
     () => currentStatValues(character, cls),
@@ -115,6 +123,7 @@ export default function EquipmentSlots({
 
   const panelProps = {
     statValues,
+    onDetail: (t: Target) => setDetail(t),
     onChange: (t: Target) => setPicker(t),
     onUnequip: unequip,
     onAttach: (t: Target) => {
@@ -124,6 +133,9 @@ export default function EquipmentSlots({
     onRemoveUpgrade: (t: Target, i: number) =>
       mutateUpgrades(t, (cur) => cur.filter((_, idx) => idx !== i)),
   }
+
+  const detailItem = detail ? itemForTarget(detail) : null
+  const detailCard = detailItem ? getCard(detailItem.cardId) : null
 
   return (
     <section className="rounded-lg border border-ash-700 bg-ash-850 p-3">
@@ -288,12 +300,46 @@ export default function EquipmentSlots({
           </div>
         </Modal>
       )}
+
+      {/* ---- Item detail ---- */}
+      {detail && detailCard && detailItem && (
+        <Modal title={detailCard.name} onClose={() => setDetail(null)}>
+          <CardStats card={detailCard} statValues={statValues} />
+
+          {(detailCard.upgradeSlots ?? 0) > 0 && (
+            <div className="mt-3 border-t border-ash-700 pt-3">
+              <p className="mb-1 text-xs text-ash-500">
+                Upgrade slots ({detailItem.upgrades.length}/
+                {detailCard.upgradeSlots})
+              </p>
+              {detailItem.upgrades.length === 0 && (
+                <p className="text-xs text-ash-600">No upgrades attached.</p>
+              )}
+              {detailItem.upgrades.map((uid, i) => {
+                const u = getCard(uid)
+                return u ? (
+                  <div
+                    key={i}
+                    className="mb-1 rounded border border-ember-600/40 bg-ash-850 p-2"
+                  >
+                    <div className="font-serif text-sm text-ember-300">
+                      {u.name}
+                    </div>
+                    <CardStats card={u} statValues={statValues} compact />
+                  </div>
+                ) : null
+              })}
+            </div>
+          )}
+        </Modal>
+      )}
     </section>
   )
 }
 
 interface PanelProps {
   statValues: Record<string, number>
+  onDetail: (t: Target) => void
   onChange: (t: Target) => void
   onUnequip: (t: Target) => void
   onAttach: (t: Target) => void
@@ -338,6 +384,7 @@ function EquippedPanel({
   target,
   item,
   statValues,
+  onDetail,
   onChange,
   onUnequip,
   onAttach,
@@ -360,15 +407,20 @@ function EquippedPanel({
   return (
     <div className="mb-2 rounded-lg border border-ash-600 bg-ash-800 p-2">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <button
+          onClick={() => onDetail(target)}
+          className="min-w-0 text-left active:opacity-70"
+        >
           <div className="text-[10px] uppercase tracking-wide text-ash-500">
             {label}
             {card.hands === 2 && (
               <span className="text-ember-500"> · two-handed</span>
             )}
           </div>
-          <div className="truncate font-serif text-soul-400">{card.name}</div>
-        </div>
+          <div className="truncate font-serif text-soul-400 underline decoration-ash-600 decoration-dotted underline-offset-2">
+            {card.name}
+          </div>
+        </button>
         <div className="flex flex-none gap-2 text-xs">
           <button
             onClick={() => onChange(target)}
@@ -385,9 +437,12 @@ function EquippedPanel({
         </div>
       </div>
 
-      <div className="mt-1">
+      <button
+        onClick={() => onDetail(target)}
+        className="mt-1 block w-full text-left active:opacity-70"
+      >
         <CardStats card={card} statValues={statValues} compact />
-      </div>
+      </button>
 
       {slots > 0 && (
         <div className="mt-2 border-t border-ash-700 pt-2">
