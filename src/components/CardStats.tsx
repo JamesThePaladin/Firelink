@@ -1,4 +1,4 @@
-import type { EquipmentCard, ItemKind, StatKey } from '../types'
+import type { DefenceRoll, EquipmentCard, ItemKind, StatKey } from '../types'
 import { STAT_KEYS, STAT_ABBR } from '../types'
 import { poolLabel } from '../lib/roll'
 
@@ -22,6 +22,17 @@ function kindLabel(card: EquipmentCard): string {
   const base = KIND_LABEL[card.kind]
   if (card.hands) return `${card.hands === 2 ? 'Two' : 'One'}-handed ${base}`
   return base
+}
+
+/** "1 blue +1" — dice pool plus a flat modifier, either of which may be absent. */
+function defenceLabel(r: DefenceRoll): string {
+  const hasDice = Object.values(r.dice).some((n) => (n ?? 0) > 0)
+  const mod = r.modifier
+    ? r.modifier > 0
+      ? `+${r.modifier}`
+      : `${r.modifier}`
+    : ''
+  return [hasDice ? poolLabel(r.dice) : '', mod].filter(Boolean).join(' ') || '—'
 }
 
 export default function CardStats({ card, statValues, compact }: Props) {
@@ -59,6 +70,33 @@ export default function CardStats({ card, statValues, compact }: Props) {
               </span>
             )
           })}
+        </div>
+      )}
+
+      {card.defence && (
+        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+          {card.defence.block && (
+            <span>
+              <span className="text-ash-500">Block </span>
+              <span className="text-soul-300">
+                {defenceLabel(card.defence.block)}
+              </span>
+            </span>
+          )}
+          {card.defence.resist && (
+            <span>
+              <span className="text-ash-500">Resist </span>
+              <span className="text-blue-300">
+                {defenceLabel(card.defence.resist)}
+              </span>
+            </span>
+          )}
+          {card.defence.dodge != null && (
+            <span>
+              <span className="text-ash-500">Dodge </span>
+              <span className="text-green-300">{card.defence.dodge} green</span>
+            </span>
+          )}
         </div>
       )}
 

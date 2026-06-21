@@ -70,6 +70,34 @@ def main():
     def cell(rn, L):
         return sh.get(rn, C(L))[0]
 
+    def die_pool(rn, letters):
+        dice = {}
+        for L in letters:
+            dv = sh.get(rn, C(L))[0]
+            if dv in DIE:
+                d = DIE[dv]
+                dice[d] = dice.get(d, 0) + 1
+        return dice
+
+    def defence(rn):
+        # Defence section: FP/FQ block dice + FR mod, FS/FT resist dice + FU mod,
+        # FV dodge rating (green dice). Block/resist cells are always dice codes.
+        d = {}
+        block, bmod = die_pool(rn, ('FP', 'FQ')), num(cell(rn, 'FR'))
+        if block or bmod:
+            d['block'] = {'dice': block}
+            if bmod:
+                d['block']['modifier'] = bmod
+        resist, rmod = die_pool(rn, ('FS', 'FT')), num(cell(rn, 'FU'))
+        if resist or rmod:
+            d['resist'] = {'dice': resist}
+            if rmod:
+                d['resist']['modifier'] = rmod
+        dodge = num(cell(rn, 'FV'))
+        if dodge:
+            d['dodge'] = int(dodge)
+        return d or None
+
     def action(rn, base):
         b = C(base)
         rng = num(sh.get(rn, b + 0)[0])
@@ -144,6 +172,9 @@ def main():
             item['upgradeSlots'] = int(slots)
         if src:
             item['source'] = src
+        dfc = defence(rn)
+        if dfc:
+            item['defence'] = dfc
         if acts:
             item['actions'] = acts
         items.append(item)
@@ -178,6 +209,20 @@ def ts_dice(d):
     return '{ ' + ', '.join(parts) + ' }' if parts else '{}'
 
 
+def ts_defence(d):
+    parts = []
+    for key in ('block', 'resist'):
+        if key in d:
+            r = d[key]
+            rp = [f"dice: {ts_dice(r['dice'])}"]
+            if 'modifier' in r:
+                rp.append(f"modifier: {r['modifier']}")
+            parts.append(f"{key}: {{ {', '.join(rp)} }}")
+    if 'dodge' in d:
+        parts.append(f"dodge: {d['dodge']}")
+    return '{ ' + ', '.join(parts) + ' }'
+
+
 def ts_action(a):
     p = []
     if 'stamina' in a:
@@ -209,6 +254,8 @@ def ts_card(c):
         p.append(f"upgradeSlots: {c['upgradeSlots']}")
     if 'source' in c:
         p.append(f"source: {ts_str(c['source'])}")
+    if 'defence' in c:
+        p.append(f"defence: {ts_defence(c['defence'])}")
     if 'actions' in c:
         p.append('actions: [' + ', '.join(ts_action(a) for a in c['actions']) + ']')
     return '  { ' + ', '.join(p) + ' },'
@@ -221,8 +268,9 @@ def write_ts(items, starting_ids):
         "//",
         "// Reliable from the sheet: name, set membership, class restriction, kind,",
         "// handedness (2H flag), stat requirements (Str/Dex/Int/Fth), source/rarity,",
+        "// defence (block/resist dice + mod, dodge rating from the Defence section),",
         "// and up to 3 actions (stamina, attack dice BLK/BLU/ORA, modifier, range,",
-        "// magic flag, effect tags). The green/dodge die is defensive and NOT on cards.",
+        "// magic flag, effect tags).",
         "// Ring + Upgrade cards attach into a gear item's 2 upgrade slots (UI = TODO).",
         "",
         "import type { EquipmentCard } from '../types'",

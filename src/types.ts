@@ -103,6 +103,23 @@ export const UPGRADE_KINDS: readonly ItemKind[] = ['ring', 'upgrade'] as const
 /** Cards that occupy a hand slot. */
 export const HAND_KINDS: readonly ItemKind[] = ['weapon', 'shield', 'spell'] as const
 
+/** A defensive roll: a dice pool plus a flat modifier (block or resist). */
+export interface DefenceRoll {
+  dice: DicePool
+  modifier?: number
+}
+
+/**
+ * Defensive stats from the sheet's Defence section. Present on shields, armour,
+ * and many weapons. Block reduces physical damage, resist reduces magic; dodge
+ * is the number of green dodge dice the gear grants.
+ */
+export interface Defence {
+  block?: DefenceRoll
+  resist?: DefenceRoll
+  dodge?: number
+}
+
 export interface ItemAction {
   /** Optional label (sheet has none; UI falls back to stamina + dice). */
   name?: string
@@ -133,6 +150,8 @@ export interface EquipmentCard {
   /** Upgrade slots on this gear (equippable gear has 2). */
   upgradeSlots?: number
   source?: ItemSource
+  /** Block / resist / dodge from the sheet's Defence section. */
+  defence?: Defence
   /** Weapon attacks / spell casts / an armour "Defend" roll. */
   actions?: ItemAction[]
   /** Card effect text / special rules. */

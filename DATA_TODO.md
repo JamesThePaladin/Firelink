@@ -36,7 +36,9 @@ Still to verify / build out:
 - [x] **Ember cards** (`kind: 'ember'`, 7) — intentionally NOT slotted; the player tracks
       embers with the physical token. Imported but inert (never appears in any picker).
 - [ ] **Spot-check stat-req scale** lines up with the class stat tiers (both 0–40 scale).
-- [ ] **Flat block / resist** — not on this sheet; armour defence is expressed via actions.
+- [x] **Defence (block / resist / dodge)** — imported from the sheet's Defence section
+      (FP–FV): block & resist as a dice pool + flat modifier, dodge as a green-dice count.
+      Present on shields, armour, and many weapons; shown in `CardStats`.
 
 Note: editing then re-running the importer overwrites this file. Put any manual
 corrections into the generator (`scripts/generate_equipment.py`), not the output.
