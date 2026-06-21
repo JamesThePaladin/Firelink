@@ -29,10 +29,13 @@ boxes are available together; mix them freely.
 ## A note on accuracy
 
 This is a fan-made tool, not affiliated with Steamforged Games. The equipment catalog is
-seeded from a community spreadsheet and the class boards are transcribed by hand, so some
-values are **approximate** — verify against your physical components. Every value lives in
-a plain data file (`src/data/`) and the app hot-reloads, so corrections are easy. See
-[`DATA_TODO.md`](DATA_TODO.md) for what's still being verified.
+seeded from the community-built **"Mathog" DS:TBG scoring spreadsheet**
+([link](https://docs.google.com/spreadsheets/d/1iAU_eg7VPNARnp8UdJQwEY2m4hekw1Af6Q4JBfLJOp8/edit))
+— a huge thanks to its authors, whose meticulous data made this app possible. The class
+boards are transcribed by hand, so some values are **approximate** — verify against your
+physical components. Every value lives in a plain data file (`src/data/`) and the app
+hot-reloads, so corrections are easy. See [`DATA_TODO.md`](DATA_TODO.md) for what's still
+being verified.
 
 ## Run it locally
 

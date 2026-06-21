@@ -1,6 +1,8 @@
 import TopBar from '../components/TopBar'
 
 const REPO_URL = 'https://github.com/JamesThePaladin/Firelink'
+const SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/1iAU_eg7VPNARnp8UdJQwEY2m4hekw1Af6Q4JBfLJOp8/edit'
 
 export default function Settings() {
   return (
@@ -30,6 +32,18 @@ export default function Settings() {
             Class stats, Heroic Actions, equipment values and dice faces are
             best-effort seeds. Verify them against your physical components and
             correct any values — the app updates instantly.
+          </p>
+          <p className="mt-2">
+            The equipment catalog is built from the community{' '}
+            <a
+              href={SHEET_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-ember-400 underline decoration-ember-600/50 underline-offset-2 active:text-ember-300"
+            >
+              "Mathog" DS:TBG spreadsheet
+            </a>{' '}
+            — huge thanks to its authors for the meticulous data.
           </p>
         </section>
       </main>
