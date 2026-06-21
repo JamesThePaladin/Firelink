@@ -27,14 +27,12 @@ Still to verify / build out:
 
 - [x] **Stat requirements** (`req`) — imported (AI–AL on the sheet).
 - [x] **Handedness** (`hands: 1 | 2`) — imported from the `2H` flag.
-- [ ] **Upgrade-attach mechanic** — rings + gems/titanite (`kind: 'ring' | 'upgrade'`)
-      attach into a gear item's 2 upgrade slots. Data + a basic attach UI exist, but the
-      *rules* (which upgrades fit which gear, ring limits, effects) need fleshing out.
-      **User flagged this as a deliberate TODO for later.**
-- [ ] **Ember cards** (`kind: 'ember'`, 7 of them) — imported but not slotted; decide how
-      they're used.
-- [ ] **Spot-check stat-req scale** lines up with the final class stat tiers (both use the
-      same 0–40 scale; confirm once class boards are finalised).
+- [x] **Upgrade-attach mechanic** — rings + gems/titanite (`kind: 'ring' | 'upgrade'`)
+      attach into each gear item's upgrade slots (inline UI, gated by stat req + class).
+      Any upgrade can go in any slot for now; fine-grained rules can come later if needed.
+- [x] **Ember cards** (`kind: 'ember'`, 7) — intentionally NOT slotted; the player tracks
+      embers with the physical token. Imported but inert (never appears in any picker).
+- [ ] **Spot-check stat-req scale** lines up with the class stat tiers (both 0–40 scale).
 - [ ] **Flat block / resist** — not on this sheet; armour defence is expressed via actions.
 
 Note: editing then re-running the importer overwrites this file. Put any manual

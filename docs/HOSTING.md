@@ -99,24 +99,57 @@ Netlify Drop (app.netlify.com/drop) — instant hosting, nothing else to configu
 
 ---
 
-## Option D — Wrap as an installable APK (no host needed) — TODO, likely preferred
+## Option D — Sideloaded APK via Capacitor (no host needed) — preferred
 
 For infrequent use (≈monthly), standing up an HTTPS host just to launch the app is
-overkill. Instead, **bundle the built `dist/` into a native Android APK** and sideload it
-once — fully offline, no server, no Pages, nothing to maintain.
+overkill. Instead the app is wrapped with **[Capacitor](https://capacitorjs.com)**, which
+**bundles the built `dist/` into a native Android APK** — fully offline, no server, no
+Pages, nothing to maintain.
 
-- **[Capacitor](https://capacitorjs.com)** (recommended): wraps the web build into a real
-  APK that **bundles the assets locally**, so it needs no host at all. Rough flow:
-  `npm i @capacitor/core @capacitor/cli @capacitor/android`, `npx cap init`, set
-  `webDir: 'dist'`, `npm run build && npx cap sync`, then build the APK
-  (`npx cap open android` in Android Studio, or Gradle `assembleDebug`).
-- **[PWABuilder](https://www.pwabuilder.com)** / **Bubblewrap (TWA):** generate an Android
-  package from a PWA — but a **TWA still points at a hosted HTTPS URL**, so it doesn't remove
-  the host. Prefer Capacitor if the goal is "no host."
+This is **already scaffolded** in the repo:
 
-**Cost/caveat:** building an APK needs the **Android SDK + JDK** installed (this machine has
-the JDK but not the Android SDK yet). It's a one-time toolchain setup; after that, rebuilding
-the APK is one command. We deferred this — pick it up when ready.
+- `capacitor.config.ts` — `appId: com.firelink.app`, `appName: Firelink`, `webDir: dist`.
+- `android/` — the native Android project (committed; build outputs are git-ignored).
+- npm scripts: `cap:sync`, `android:open`, `android:apk`.
+
+### One-time toolchain setup
+Building the APK needs the **Android SDK** and a **compatible JDK**:
+
+1. **JDK 21.** Capacitor 8 / Android Gradle Plugin target **JDK 21**. This machine has a
+   newer JDK (26) which Gradle may reject — install a JDK 21 (e.g. Temurin 21) and point
+   `JAVA_HOME` at it for the build.
+2. **Android SDK.** Easiest is **Android Studio** (bundles the SDK + an emulator).
+   Command-line only: install the **command-line tools**, then:
+   ```bash
+   sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+   # accept licenses:
+   sdkmanager --licenses
+   ```
+   Set `ANDROID_HOME` (e.g. `~/Android/Sdk`) and add `platform-tools` to `PATH`.
+
+### Build the APK
+```bash
+npm run android:apk
+# = npm run build && cap sync android && cd android && ./gradlew assembleDebug
+```
+The debug APK lands at:
+`android/app/build/outputs/apk/debug/app-debug.apk`
+
+Copy it to your phone and open it to install (enable "install from unknown sources" once).
+It runs fully offline — all data and assets are bundled. To rebuild after code changes,
+just run `npm run android:apk` again and reinstall.
+
+> Prefer Android Studio? `npm run android:open` opens the `android/` project; press Run, or
+> **Build → Build Bundle(s)/APK(s) → Build APK(s)**.
+
+**Optional — app icon:** the launcher currently uses Capacitor's default icon. To brand it,
+generate icons from a source PNG with `@capacitor/assets`
+(`npx @capacitor/assets generate --android`) and re-sync.
+
+### Why not PWABuilder / Bubblewrap (TWA)?
+They generate an Android package from a PWA, but a **TWA still points at a hosted HTTPS
+URL**, so it wouldn't remove the host. Capacitor bundles the assets locally, which is the
+whole point here.
 
 ---
 
