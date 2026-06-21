@@ -128,7 +128,16 @@ Building the APK needs the **Android SDK** and a **compatible JDK**:
    Set `ANDROID_HOME` (e.g. `~/Android/Sdk`) and add `platform-tools` to `PATH`.
 
 ### Build the APK
+On **this machine** the toolchain is already installed in user-space:
+- JDK 21 → `~/.local/opt/jdk-21`
+- Android SDK → `~/Android/Sdk` (build-tools 36.0.0, platform android-36, platform-tools)
+- `android/local.properties` points Gradle at the SDK (git-ignored).
+
+The system default JDK is 26 (too new for Gradle), so **export JDK 21 first**, then build:
 ```bash
+export JAVA_HOME=~/.local/opt/jdk-21
+export ANDROID_HOME=~/Android/Sdk
+export PATH="$JAVA_HOME/bin:$PATH"
 npm run android:apk
 # = npm run build && cap sync android && cd android && ./gradlew assembleDebug
 ```
@@ -137,7 +146,11 @@ The debug APK lands at:
 
 Copy it to your phone and open it to install (enable "install from unknown sources" once).
 It runs fully offline — all data and assets are bundled. To rebuild after code changes,
-just run `npm run android:apk` again and reinstall.
+re-export `JAVA_HOME` and run `npm run android:apk` again, then reinstall.
+
+> A confirmed build (2026-06-20) produced a 4.2 MB debug APK — `com.firelink.app`,
+> label "Firelink", targetSdk 36. Debug builds are auto-signed with the debug keystore,
+> so they install without extra signing.
 
 > Prefer Android Studio? `npm run android:open` opens the `android/` project; press Run, or
 > **Build → Build Bundle(s)/APK(s) → Build APK(s)**.
