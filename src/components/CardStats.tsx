@@ -134,7 +134,9 @@ export default function CardStats({ card, statValues, compact }: Props) {
       })}
 
       {card.text && !compact && (
-        <p className="mt-1 text-xs text-ash-400">{card.text}</p>
+        <div className="mt-2 whitespace-pre-line rounded border border-ash-700 bg-ash-900 p-2 text-xs leading-snug text-ash-300">
+          {card.text}
+        </div>
       )}
     </div>
   )

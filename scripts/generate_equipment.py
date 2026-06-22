@@ -177,6 +177,14 @@ def main():
             item['defence'] = dfc
         if acts:
             item['actions'] = acts
+        # 'Extras > Description' (col IH): rules text shown in the detail panel.
+        # Runs of 2+ spaces in the sheet separate logical lines -> newlines.
+        desc = cell(rn, 'IH')
+        if desc:
+            desc = re.sub(r' {2,}', '\n', str(desc).strip())
+            desc = re.sub(r'\n{2,}', '\n', desc)
+            if desc:
+                item['text'] = desc
         items.append(item)
 
         # "Base Item" flag (col Y) marks a class's starting/default kit.
@@ -200,7 +208,11 @@ def main():
 
 
 def ts_str(s):
-    return "'" + s.replace('\\', '\\\\').replace("'", "\\'") + "'"
+    return (
+        "'"
+        + s.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '\\n')
+        + "'"
+    )
 
 
 def ts_dice(d):
@@ -258,6 +270,8 @@ def ts_card(c):
         p.append(f"defence: {ts_defence(c['defence'])}")
     if 'actions' in c:
         p.append('actions: [' + ', '.join(ts_action(a) for a in c['actions']) + ']')
+    if 'text' in c:
+        p.append(f"text: {ts_str(c['text'])}")
     return '  { ' + ', '.join(p) + ' },'
 
 
@@ -269,8 +283,8 @@ def write_ts(items, starting_ids):
         "// Reliable from the sheet: name, set membership, class restriction, kind,",
         "// handedness (2H flag), stat requirements (Str/Dex/Int/Fth), source/rarity,",
         "// defence (block/resist dice + mod, dodge rating from the Defence section),",
-        "// and up to 3 actions (stamina, attack dice BLK/BLU/ORA, modifier, range,",
-        "// magic flag, effect tags).",
+        "// up to 3 actions (stamina, attack dice BLK/BLU/ORA, modifier, range, magic",
+        "// flag, effect tags), and the 'Extras > Description' rules text (col IH).",
         "// Ring + Upgrade cards attach into a gear item's 2 upgrade slots (UI = TODO).",
         "",
         "import type { EquipmentCard } from '../types'",
