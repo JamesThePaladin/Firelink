@@ -17,7 +17,7 @@ export default function Modal({ title, onClose, children }: Props) {
         className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl border-t border-ash-600 bg-ash-900 pb-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-ash-700 bg-ash-900 px-4 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ash-700 bg-ash-900 px-4 py-3">
           <h3 className="font-serif text-soul-400">{title}</h3>
           <button
             onClick={onClose}
