@@ -1,3 +1,5 @@
+FULLY SLOPPED UP, PROVIDED AS IS, USE AT YOUR OWN RISK
+
 # Firelink
 
 A free, offline **character sheet for [Dark Souls: The Board Game](https://www.steamforged.com/dark-souls-tbg)** —
